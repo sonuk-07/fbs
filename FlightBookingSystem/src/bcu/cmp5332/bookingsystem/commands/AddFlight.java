@@ -22,13 +22,15 @@ public class AddFlight implements  Command {
     @Override
     public void execute(FlightBookingSystem flightBookingSystem) throws FlightBookingSystemException {
         int maxId = 0;
-        if (flightBookingSystem.getFlights().size() > 0) {
-            int lastIndex = flightBookingSystem.getFlights().size() - 1;
-            maxId = flightBookingSystem.getFlights().get(lastIndex).getId();
+        for (Flight f : flightBookingSystem.getFlights()) {
+            if (f.getId() > maxId) {
+                maxId = f.getId();
+            }
         }
-        
+
         Flight flight = new Flight(++maxId, flightNumber, origin, destination, departureDate);
         flightBookingSystem.addFlight(flight);
         System.out.println("Flight #" + flight.getId() + " added.");
     }
+
 }

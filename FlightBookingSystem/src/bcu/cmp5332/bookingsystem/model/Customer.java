@@ -14,15 +14,12 @@ public class Customer {
     private String phone;
     private final List<Booking> bookings = new ArrayList<>();
     
-    // TODO: implement constructor here
 	public Customer(int id, String name, String phone) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.phone = phone;
 	}
-    
-    // TODO: implementation of Getter and Setter methods
     
 	public int getId() {
 		return id;
@@ -54,6 +51,25 @@ public class Customer {
 	
     public void addBooking(Booking booking) {
         bookings.add(booking);
+    }
+    
+    public String getDetailsShort() {
+    	return id + ": " + name + "(" + phone + ")";
+    }
+    
+    public String getDetailsLong() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Customer ID: ").append(id)
+          .append("\nName: ").append(name)
+          .append("\nPhone: ").append(phone)
+          .append("\nBookings: ").append(bookings.size());
+
+        for (Booking booking : bookings) {
+            sb.append("\n - Flight ID: ").append(booking.getFlight().getId())
+              .append(", Date: ").append(booking.getBookingDate());
+        }
+
+        return sb.toString();
     }
 
     public void cancelBookingForFlight(int flightId) {

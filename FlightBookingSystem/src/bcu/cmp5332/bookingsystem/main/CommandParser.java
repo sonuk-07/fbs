@@ -51,23 +51,25 @@ public class CommandParser {
 
                 default:
                     if (parts.length == 2) {
-                        // int id = Integer.parseInt(parts[1]);
-                        // if (cmd.equals("showflight")) {
-                        //     return new ShowFlight(id);
-                        // } else if (cmd.equals("showcustomer")) {
-                        //     return new ShowCustomer(id);
-                        // }
+                         int id = Integer.parseInt(parts[1]);
+                         if (cmd.equals("showflight")) {
+                             return new ShowFlight(id);
+                         } else if (cmd.equals("showcustomer")) {
+                             return new ShowCustomer(id);
+                         }
                     } else if (parts.length == 3) {
-                        // int customerId = Integer.parseInt(parts[1]);
-                        // int flightId = Integer.parseInt(parts[2]);
-                        // if (cmd.equals("addbooking")) {
-                        //     return new AddBooking(customerId, flightId);
-                        // } else if (cmd.equals("editbooking")) {
-                        //     return new EditBooking(customerId, flightId);
-                        // } else if (cmd.equals("cancelbooking")) {
-                        //     return new CancelBooking(customerId, flightId);
-                        // }
+                        int id1 = Integer.parseInt(parts[1]);
+                        int id2 = Integer.parseInt(parts[2]);
+
+                        if (cmd.equals("addbooking")) {
+                            return new AddBooking(id1, id2);   // id1 = customerId, id2 = flightId
+                        } else if (cmd.equals("editbooking")) {
+                            return new EditBooking(id1, id2);  // id1 = bookingId, id2 = flightId (based on your description)
+                        } else if (cmd.equals("cancelbooking")) {
+                            return new CancelBooking(id1, id2);
+                        }
                     }
+
                     break;
             }
 

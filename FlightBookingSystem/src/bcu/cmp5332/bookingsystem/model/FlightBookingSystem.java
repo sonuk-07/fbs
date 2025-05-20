@@ -62,5 +62,32 @@ public class FlightBookingSystem {
         }
         customers.put(customer.getId(), customer);
     }
+    
+    
+    public void addBooking(Customer customer, Flight flight) throws FlightBookingSystemException {
+        if (customer.hasBookingForFlight(flight.getId())) {
+            throw new FlightBookingSystemException("Customer already has a booking on this flight.");
+        }
+        if (flight.getDepartureDate().isBefore(systemDate)) {
+            throw new FlightBookingSystemException("Cannot book a flight that has already departed.");
+        }
+
+        Booking booking = new Booking(customer, flight, systemDate);
+        customer.addBooking(booking);
+        flight.addPassenger(customer);
+    }
+
+    
+    public void cancelBooking(Customer customer, Flight flight) throws FlightBookingSystemException {
+        if (!customer.hasBookingForFlight(flight.getId())) {
+            throw new FlightBookingSystemException("Customer does not have a booking for this flight.");
+        }
+
+        customer.cancelBookingForFlight(flight.getId());
+        flight.removePassenger(customer);
+    }
+
+
+
 
 }

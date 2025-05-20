@@ -10,4 +10,8 @@ public class FlightBookingSystemException extends Exception {
     public FlightBookingSystemException(String message) {
         super(message);
     }
+
+        public FlightBookingSystemException(String message, Throwable cause) {
+            super(message, cause);
+        }
 }

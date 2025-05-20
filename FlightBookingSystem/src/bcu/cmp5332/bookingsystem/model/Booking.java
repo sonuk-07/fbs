@@ -7,6 +7,7 @@ public class Booking {
     private Customer customer;
     private Flight flight;
     private LocalDate bookingDate;
+    private int id;
     
 	public Booking(Customer customer, Flight flight, LocalDate bookingDate) {
 		super();
@@ -14,7 +15,14 @@ public class Booking {
 		this.flight = flight;
 		this.bookingDate = bookingDate;
 	}
+	
+	public int getId() {
+	    return id;
+	}
 
+	public void setId(int id) {
+	    this.id = id;
+	}
 
 	public Customer getCustomer() {
 		return customer;

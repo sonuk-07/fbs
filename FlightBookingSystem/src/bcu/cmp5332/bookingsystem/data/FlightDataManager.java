@@ -1,6 +1,7 @@
 package bcu.cmp5332.bookingsystem.data;
 
 import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
+import java.time.LocalDateTime;
 import bcu.cmp5332.bookingsystem.model.Flight;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 import java.io.File;
@@ -26,7 +27,8 @@ public class FlightDataManager implements DataManager {
                     String flightNumber = properties[1];
                     String origin = properties[2];
                     String destination = properties[3];
-                    LocalDate departureDate = LocalDate.parse(properties[4]);
+                    LocalDateTime dateTime = LocalDateTime.parse(properties[4]);
+                    LocalDate departureDate = dateTime.toLocalDate();
                     Flight flight = new Flight(id, flightNumber, origin, destination, departureDate);
                     fbs.addFlight(flight);
                 } catch (NumberFormatException ex) {
@@ -46,9 +48,11 @@ public class FlightDataManager implements DataManager {
                 out.print(flight.getFlightNumber() + SEPARATOR);
                 out.print(flight.getOrigin() + SEPARATOR);
                 out.print(flight.getDestination() + SEPARATOR);
-                out.print(flight.getDepartureDate() + SEPARATOR);
-                out.println();
+                out.print(flight.getDepartureDate().atStartOfDay().withSecond(0).withNano(0) + SEPARATOR); // Timestamp
+                out.println(); // end of line
             }
         }
     }
+
+
 }

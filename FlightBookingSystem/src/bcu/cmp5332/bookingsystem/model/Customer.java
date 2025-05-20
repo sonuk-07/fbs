@@ -75,4 +75,9 @@ public class Customer {
     public void cancelBookingForFlight(int flightId) {
     	bookings.removeIf(booking->booking.getFlight().getId()==flightId);
     }
+    
+    public boolean hasBookingForFlight(int flightId) {
+        return bookings.stream().anyMatch(b -> b.getFlight().getId() == flightId);
+    }
+
 }

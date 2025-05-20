@@ -2,7 +2,6 @@ package bcu.cmp5332.bookingsystem.main;
 
 import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData;
 import bcu.cmp5332.bookingsystem.commands.Command;
-import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 
 import java.io.BufferedReader;
@@ -27,8 +26,12 @@ public class Main {
             try {
                 Command command = CommandParser.parse(line);
                 command.execute(fbs);
+                FlightBookingSystemData.store(fbs);
+
             } catch (FlightBookingSystemException ex) {
-                System.out.println(ex.getMessage());
+                System.out.println("Error: " + ex.getMessage());
+            } catch (IOException ex) {
+                System.out.println("I/O Error: " + ex.getMessage());
             }
         }
     }

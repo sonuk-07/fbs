@@ -7,49 +7,69 @@ public class Booking {
     private Customer customer;
     private Flight flight;
     private LocalDate bookingDate;
-    private int id;
-    
-	public Booking(Customer customer, Flight flight, LocalDate bookingDate) {
-		super();
-		this.customer = customer;
-		this.flight = flight;
-		this.bookingDate = bookingDate;
-	}
-	
-	public int getId() {
-	    return id;
-	}
+    private CommercialClassType bookedClass;
 
-	public void setId(int id) {
-	    this.id = id;
-	}
+    public Booking(Customer customer, Flight flight, LocalDate bookingDate) {
+        this(customer, flight, bookingDate, CommercialClassType.ECONOMY);
+    }
 
-	public Customer getCustomer() {
-		return customer;
-	}
+    public Booking(Customer customer, Flight flight, LocalDate bookingDate, CommercialClassType bookedClass) {
+        this.customer = customer;
+        this.flight = flight;
+        this.bookingDate = bookingDate;
+        this.bookedClass = bookedClass;
+    }
 
+    public Customer getCustomer() {
+        return customer;
+    }
 
-	public void setCustomer(Customer customer) {
-		this.customer = customer;
-	}
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
 
+    public Flight getFlight() {
+        return flight;
+    }
 
-	public Flight getFlight() {
-		return flight;
-	}
+    public void setFlight(Flight flight) {
+        this.flight = flight;
+    }
 
+    public LocalDate getBookingDate() {
+        return bookingDate;
+    }
 
-	public void setFlight(Flight flight) {
-		this.flight = flight;
-	}
+    public void setBookingDate(LocalDate bookingDate) {
+        this.bookingDate = bookingDate;
+    }
 
+    public CommercialClassType getBookedClass() {
+        return bookedClass;
+    }
 
-	public LocalDate getBookingDate() {
-		return bookingDate;
-	}
+    public void setBookedClass(CommercialClassType bookedClass) {
+        this.bookedClass = bookedClass;
+    }
 
+    public String getDetailsShort() {
+        return "Booking: " + flight.getFlightNumber() + " - " + bookedClass.getClassName();
+    }
 
-	public void setBookingDate(LocalDate bookingDate) {
-		this.bookingDate = bookingDate;
-	}   
+    public String getDetailsLong() {
+        try {
+            return "Booking Details:\n" +
+                   "Customer: " + customer.getDetailsShort() + "\n" +
+                   "Flight: " + flight.getDetailsShort() + "\n" +
+                   "Class: " + bookedClass.getClassName() + "\n" +
+                   "Price: £" + flight.getPriceForClass(bookedClass) + "\n" +
+                   "Booking Date: " + bookingDate;
+        } catch (Exception e) {
+            return "Booking Details:\n" +
+                   "Customer: " + customer.getDetailsShort() + "\n" +
+                   "Flight: " + flight.getDetailsShort() + "\n" +
+                   "Class: " + bookedClass.getClassName() + "\n" +
+                   "Booking Date: " + bookingDate;
+        }
+    }
 }

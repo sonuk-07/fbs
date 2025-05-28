@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays; // Import Arrays for easy conversion of enum values to list
+import java.util.List;
 
 public class EditBooking implements Command {
-    private final int customerId; // We need customer ID to find the booking
+    private final int customerId;
     private final int flightId;
 
     public EditBooking(int customerId, int flightId) {
@@ -20,43 +20,41 @@ public class EditBooking implements Command {
     }
 
     @Override
-    public void execute(FlightBookingSystem fbs) throws FlightBookingSystemException {
-        // Retrieve the customer and flight first
+    public void execute(FlightBookingSystem fbs, BufferedReader reader) throws FlightBookingSystemException {
         Customer customer = fbs.getCustomerByID(customerId);
         if (customer == null) {
             throw new FlightBookingSystemException("Customer with ID " + customerId + " not found.");
         }
 
+        // Get flight
         Flight flight = fbs.getFlightByID(flightId);
         if (flight == null) {
             throw new FlightBookingSystemException("Flight with ID " + flightId + " not found.");
         }
 
+        // Find booking
         Booking bookingToEdit = null;
         for (Booking booking : customer.getBookings()) {
-            // Assuming a booking is uniquely identified by customer and flight for simplicity,
-            // or if there's a unique booking ID within the customer's bookings.
-            // If booking has its own ID, you would iterate through fbs.getBookings()
-            // and match by booking.getId()
-            if (booking.getFlight().getId() == flightId) { // Check if booking is for this flight
+            if ((booking.getOutboundFlight() != null && booking.getOutboundFlight().getId() == flightId) ||
+                (booking.getReturnFlight() != null && booking.getReturnFlight().getId() == flightId)) {
                 bookingToEdit = booking;
                 break;
             }
-        }
+        }     
 
         if (bookingToEdit == null) {
             throw new FlightBookingSystemException("Booking for Customer ID " + customerId + " on Flight ID " + flightId + " not found.");
         }
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-            // Edit Booking Date
+            // --- Edit Booking Date ---
             LocalDate newBookingDate = null;
             int attempts = 3;
             while (attempts > 0) {
                 System.out.print("Enter new booking date (YYYY-MM-DD) or press Enter to keep current (" + bookingToEdit.getBookingDate() + "): ");
                 String input = br.readLine();
                 if (input.isEmpty()) {
-                    newBookingDate = bookingToEdit.getBookingDate(); // Keep current date
+                    newBookingDate = bookingToEdit.getBookingDate();
                     break;
                 }
                 try {
@@ -69,14 +67,15 @@ public class EditBooking implements Command {
             }
 
             if (newBookingDate == null) {
-                throw new FlightBookingSystemException("Failed to parse valid date after multiple attempts.");
+                throw new FlightBookingSystemException("Failed to parse a valid date after multiple attempts.");
             }
             bookingToEdit.setBookingDate(newBookingDate);
 
-            // Edit Booking Class
+            // --- Edit Booking Class ---
             CommercialClassType newClass = null;
-            System.out.println("\nAvailable Classes for Flight #" + flightId + ":");
             List<CommercialClassType> availableClasses = flight.getAvailableClasses();
+
+            System.out.println("\nAvailable Classes for Flight #" + flightId + ":");
             for (int i = 0; i < availableClasses.size(); i++) {
                 CommercialClassType classType = availableClasses.get(i);
                 System.out.println((i + 1) + ". " + classType.getClassName() + " (£" + flight.getPriceForClass(classType) + ")");
@@ -87,38 +86,34 @@ public class EditBooking implements Command {
                 System.out.print("Enter new class number (1-" + availableClasses.size() + ") or press Enter to keep current (" + bookingToEdit.getBookedClass().getClassName() + "): ");
                 String classInput = br.readLine();
                 if (classInput.isEmpty()) {
-                    newClass = bookingToEdit.getBookedClass(); // Keep current class
+                    newClass = bookingToEdit.getBookedClass();
                     break;
                 }
                 try {
                     int classChoice = Integer.parseInt(classInput);
                     if (classChoice > 0 && classChoice <= availableClasses.size()) {
-                        newClass = availableClasses.get(classChoice - 1);
-                        if (flight.isClassAvailable(newClass)) {
-                            bookingToEdit.setBookedClass(newClass);
+                        CommercialClassType selectedClass = availableClasses.get(classChoice - 1);
+                        if (flight.isClassAvailable(selectedClass)) {
+                            newClass = selectedClass;
                             break;
                         } else {
-                            System.out.println("Selected class is not truly available (e.g., full). Please choose another. Attempts left: " + attempts);
+                            System.out.println("Selected class is not available. Attempts left: " + --attempts);
                         }
                     } else {
-                        System.out.println("Invalid class number. Please try again. Attempts left: " + attempts);
+                        System.out.println("Invalid class number. Please try again. Attempts left: " + --attempts);
                     }
                 } catch (NumberFormatException e) {
-                    attempts--;
-                    System.out.println("Invalid input. Please enter a number. Attempts left: " + attempts);
-                } catch (FlightBookingSystemException e) {
-                    // This catches the exception from getPriceForClass if the class is not available
-                    System.out.println(e.getMessage() + " Please choose another. Attempts left: " + attempts);
-                    attempts--;
+                    System.out.println("Invalid input. Please enter a number. Attempts left: " + --attempts);
                 }
             }
 
             if (newClass == null) {
                 throw new FlightBookingSystemException("Failed to select a valid class after multiple attempts.");
             }
+
             bookingToEdit.setBookedClass(newClass);
 
-            System.out.println("Booking updated successfully.");
+            System.out.println("\nBooking updated successfully.");
             System.out.println(bookingToEdit.getDetailsLong());
 
         } catch (IOException e) {

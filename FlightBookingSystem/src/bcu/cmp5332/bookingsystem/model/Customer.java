@@ -3,24 +3,33 @@ package bcu.cmp5332.bookingsystem.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Customer {
     
     private int id;
     private String name;
     private String phone;
+    private String email;
+    private boolean isDeleted;
     private final List<Booking> bookings = new ArrayList<>();
     
-	public Customer(int id, String name, String phone) {
+	public Customer(int id, String name, String phone, String email) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.phone = phone;
+		this.email = email;
+		this.isDeleted = false;
+		
 	}
     
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
 	public int getId() {
 		return id;
 	}
@@ -45,6 +54,14 @@ public class Customer {
 		this.phone = phone;
 	}
 
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+    
 	public List<Booking> getBookings() {
 		return bookings;
 	}
@@ -54,7 +71,7 @@ public class Customer {
     }
     
     public String getDetailsShort() {
-    	return id + ": " + name + "(" + phone + ")";
+    	return id + ": " + name + "(" + phone + "," + email + ")";
     }
     
     public String getDetailsLong() {
@@ -62,22 +79,44 @@ public class Customer {
         sb.append("Customer ID: ").append(id)
           .append("\nName: ").append(name)
           .append("\nPhone: ").append(phone)
+          .append("\nEmail: ").append(email)
           .append("\nBookings: ").append(bookings.size());
 
         for (Booking booking : bookings) {
-            sb.append("\n - Flight ID: ").append(booking.getFlight().getId())
-              .append(", Date: ").append(booking.getBookingDate());
+            // Handle outbound flight info if exists
+            if (booking.getOutboundFlight() != null) {
+                sb.append("\n - Outbound Flight ID: ").append(booking.getOutboundFlight().getId())
+                  .append(", Date: ").append(booking.getBookingDate())
+                  .append(", Class: ").append(booking.getBookedClass().getClassName());
+            }
+            // Handle return flight info if exists
+            if (booking.getReturnFlight() != null) {
+                sb.append("\n - Return Flight ID: ").append(booking.getReturnFlight().getId())
+                  .append(", Date: ").append(booking.getBookingDate())
+                  .append(", Class: ").append(booking.getBookedClass().getClassName());
+            }
         }
 
         return sb.toString();
     }
 
     public void cancelBookingForFlight(int flightId) {
-    	bookings.removeIf(booking->booking.getFlight().getId()==flightId);
+        bookings.removeIf(booking -> 
+            (booking.getOutboundFlight() != null && booking.getOutboundFlight().getId() == flightId) ||
+            (booking.getReturnFlight() != null && booking.getReturnFlight().getId() == flightId)
+        );
     }
+
     
-    public boolean hasBookingForFlight(int flightId) {
-        return bookings.stream().anyMatch(b -> b.getFlight().getId() == flightId);
+    public boolean hasBookingForFlight(Flight flight) {
+        for (Booking booking : bookings) {
+            if ((booking.getOutboundFlight() != null && booking.getOutboundFlight().equals(flight)) ||
+                (booking.getReturnFlight() != null && booking.getReturnFlight().equals(flight))) {
+                return true;
+            }
+        }
+        return false;
     }
+
 
 }

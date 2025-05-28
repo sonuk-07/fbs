@@ -3,22 +3,23 @@ package bcu.cmp5332.bookingsystem.commands;
 import java.io.BufferedReader;
 
 import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
-import bcu.cmp5332.bookingsystem.model.Customer;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 
-public class ShowCustomer implements Command {
+public class RemoveCustomer implements Command {
+
     private final int customerId;
 
-    public ShowCustomer(int customerId) {
+    public RemoveCustomer(int customerId) {
         this.customerId = customerId;
     }
 
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
-        Customer customer = flightBookingSystem.getCustomerByID(customerId);
-        if (customer == null) {
-            throw new FlightBookingSystemException("Customer ID not found: " + customerId);
+        boolean removed = flightBookingSystem.removeCustomerById(customerId);
+        if (removed) {
+            System.out.println("Customer #" + customerId + " successfully removed (marked as deleted).");
+        } else {
+            throw new FlightBookingSystemException("Customer with ID " + customerId + " not found or already removed.");
         }
-        System.out.println(customer.getDetailsLong());
     }
 }

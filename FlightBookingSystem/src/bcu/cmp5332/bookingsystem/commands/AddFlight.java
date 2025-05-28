@@ -6,6 +6,7 @@ import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 import bcu.cmp5332.bookingsystem.model.FlightType;
 import bcu.cmp5332.bookingsystem.model.CommercialClassType;
 
+import java.io.BufferedReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -64,21 +65,17 @@ public class AddFlight implements Command {
     }
 
     @Override
-    public void execute(FlightBookingSystem flightBookingSystem) throws FlightBookingSystemException {
-        int maxId = 0;
-        for (Flight f : flightBookingSystem.getFlights()) {
-            if (f.getId() > maxId) {
-                maxId = f.getId();
-            }
-        }
+    public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
+        int nextId = flightBookingSystem.generateNextFlightId();
+        // --- CHANGE END ---
 
         Flight flight;
         if (flightType == FlightType.BUDGET) {
-            flight = new Flight(++maxId, flightNumber, origin, destination, 
-                              departureDate, economyPrice, capacity);
+            flight = new Flight(nextId, flightNumber, origin, destination, 
+                                departureDate, economyPrice, capacity);
         } else {
-            flight = new Flight(++maxId, flightNumber, origin, destination, 
-                              departureDate, economyPrice, capacity, flightType, classCapacities);
+            flight = new Flight(nextId, flightNumber, origin, destination, 
+                                departureDate, economyPrice, capacity, flightType, classCapacities);
         }
 
         flightBookingSystem.addFlight(flight);
@@ -87,9 +84,13 @@ public class AddFlight implements Command {
         System.out.println("Flight Type: " + flightType);
         if (flightType == FlightType.COMMERCIAL) {
             System.out.println("Available Classes and Prices:");
+            // For displaying actual prices after addition, ensure getPriceForClass considers systemDate if dynamic
+            // or just reflects the base price if not yet dynamic.
             for (CommercialClassType classType : flight.getAvailableClasses()) {
-                System.out.println("  " + classType.getClassName() + ": £" + 
-                                 flight.getPriceForClass(classType));
+                // If you want to show dynamic price here, you'd call:
+                // System.out.println("  " + classType.getClassName() + ": £" + flight.getDynamicPrice(classType, flightBookingSystem.getSystemDate()));
+                // Otherwise, the base price is fine for "Available Classes and Prices:"
+                System.out.println("  " + classType.getClassName() + ": £" + flight.getPriceForClass(classType)); 
             }
         } else {
             System.out.println("Single Class Price: £" + economyPrice);

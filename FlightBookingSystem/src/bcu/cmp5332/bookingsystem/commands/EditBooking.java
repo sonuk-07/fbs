@@ -10,15 +10,40 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+/**
+ * Command to edit an existing flight booking.
+ * This command allows a user to modify specific details of a booking,
+ * such as the booking date and the commercial class.
+ */
+
 public class EditBooking implements Command {
     private final int customerId;
     private final int flightId;
 
+    /**
+     * Constructor for the EditBooking command.
+     * @param customerId The ID of the customer whose booking is to be edited.
+     * @param flightId The ID of the flight associated with the booking to be edited.
+     */
     public EditBooking(int customerId, int flightId) {
         this.customerId = customerId;
         this.flightId = flightId;
     }
-
+    
+    
+    /**
+     * Executes the EditBooking command.
+     * This method guides the user through modifying the booking date and
+     * the commercial class for a specific booking. It includes input validation
+     * and displays available options.
+     *
+     * @param fbs The FlightBookingSystem instance.
+     * @param reader The BufferedReader for user input.
+     * @throws FlightBookingSystemException If the customer, flight, or booking is not found,
+     * or if input parsing fails after multiple attempts,
+     * or if there's an I/O error.
+     */
+    
     @Override
     public void execute(FlightBookingSystem fbs, BufferedReader reader) throws FlightBookingSystemException {
         Customer customer = fbs.getCustomerByID(customerId);

@@ -2,6 +2,11 @@ package bcu.cmp5332.bookingsystem.model;
 
 import java.math.BigDecimal;
 
+/**
+ * Represents a meal option available for selection on flights.
+ * Each meal has an ID, name, description, price, and a specific {@link MealType}.
+ */
+
 public class Meal {
 
     private int id;
@@ -11,6 +16,18 @@ public class Meal {
     private MealType type; // NEW FIELD: Meal Type (e.g., VEG, NON_VEG)
     private boolean isDeleted;
 
+    
+    /**
+     * Constructs a new Meal object.
+     *
+     * @param id The unique ID of the meal.
+     * @param name The name of the meal (e.g., "Chicken Biryani").
+     * @param description A brief description of the meal.
+     * @param price The cost of the meal.
+     * @param type The {@link MealType} (e.g., VEG, NON_VEG) of the meal.
+     */
+    
+    
     // UPDATED CONSTRUCTOR
     public Meal(int id, String name, String description, BigDecimal price, MealType type) {
         this.id = id;
@@ -73,11 +90,27 @@ public class Meal {
         isDeleted = deleted;
     }
 
+    
+    /**
+     * Returns a short string representation of the meal details.
+     * This includes ID, name, type, and price.
+     * @return A {@link String} containing a concise summary of the meal.
+     */
+    
+    
     // Helper methods for display (UPDATED)
     public String getDetailsShort() {
         return id + ": " + name + " (" + type.getDisplayName() + ") " + " (£" + price + ")";
     }
 
+    
+    /**
+     * Returns a long string representation of the meal details.
+     * This provides a comprehensive overview including all meal attributes
+     * and its deletion status.
+     * @return A {@link String} containing detailed information about the meal.
+     */
+    
     public String getDetailsLong() {
         StringBuilder sb = new StringBuilder();
         sb.append("Meal ID: ").append(id)

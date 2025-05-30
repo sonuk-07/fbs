@@ -15,16 +15,40 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors; // Import Collectors
 
+
+/**
+ * Command to add a new booking to the flight booking system.
+ * This command handles the selection of flights (outbound and optional return),
+ * commercial class, and meal preferences, calculates the total price,
+ * and confirms the booking with the user.
+ */
+
 public class AddBooking implements Command {
     private final int customerId;
     private final int outboundFlightId;
     private final Integer returnFlightId;
     private final CommercialClassType selectedClass;
+    
+    /**
+     * Constructor for a one-way flight booking.
+     * @param customerId The ID of the customer making the booking.
+     * @param outboundFlightId The ID of the outbound flight.
+     * @param selectedClass The commercial class type for the booking.
+     */
 
     public AddBooking(int customerId, int outboundFlightId, CommercialClassType selectedClass) {
         this(customerId, outboundFlightId, null, selectedClass);
     }
 
+    
+    /**
+     * Constructor for a round-trip flight booking.
+     * @param customerId The ID of the customer making the booking.
+     * @param outboundFlightId The ID of the outbound flight.
+     * @param returnFlightId The ID of the return flight (can be null for one-way).
+     * @param selectedClass The commercial class type for the booking.
+     */
+    
     public AddBooking(int customerId, int outboundFlightId, Integer returnFlightId, CommercialClassType selectedClass) {
         this.customerId = customerId;
         this.outboundFlightId = outboundFlightId;
@@ -32,6 +56,24 @@ public class AddBooking implements Command {
         this.selectedClass = selectedClass;
     }
 
+    /**
+     * Executes the AddBooking command.
+     * This method performs several steps:
+     * 1. Retrieves customer and flight details.
+     * 2. Performs pre-booking checks (class availability, seat capacity).
+     * 3. Calculates and displays dynamic flight prices.
+     * 4. Guides the user through meal selection, filtering by customer preference.
+     * 5. Displays a summary of booking details, including total estimated price.
+     * 6. Prompts for user confirmation before finalizing the booking.
+     * 7. Adds the new booking to the system if confirmed.
+     *
+     * @param flightBookingSystem The FlightBookingSystem instance.
+     * @param reader The BufferedReader for user input.
+     * @throws FlightBookingSystemException If any business rule is violated (e.g., flight not found, no seats)
+     * or if there's an error during input/output operations.
+     */
+
+    
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
         try {

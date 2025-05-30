@@ -3,6 +3,14 @@ package bcu.cmp5332.bookingsystem.model;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
+/**
+ * Represents a customer in the flight booking system.
+ * A customer has an ID, name, phone number, email, age, gender, preferred meal type,
+ * and a list of bookings. Customers can also be marked as deleted.
+ */
+
 public class Customer {
 
     private int id;
@@ -15,6 +23,19 @@ public class Customer {
     private boolean isDeleted;
     private final List<Booking> bookings = new ArrayList<>();
 
+    
+    /**
+     * Constructs a new Customer object with the specified details.
+     *
+     * @param id The unique ID of the customer.
+     * @param name The name of the customer.
+     * @param phone The phone number of the customer.
+     * @param email The email address of the customer.
+     * @param age The age of the customer.
+     * @param gender The gender of the customer.
+     * @param preferredMealType The preferred meal type of the customer.
+     */
+    
     // UPDATED CONSTRUCTOR
     public Customer(int id, String name, String phone, String email, int age, String gender, MealType preferredMealType) {
         super();
@@ -75,6 +96,13 @@ public class Customer {
     public void setGender(String gender) {
         this.gender = gender;
     }
+    
+    /**
+     * Sets the preferred meal type of the customer.
+     *
+     * @param preferredMealType The new preferred meal type.
+     */
+    
 
     // NEW GETTER AND SETTER for Preferred Meal Type
     public MealType getPreferredMealType() {
@@ -101,12 +129,29 @@ public class Customer {
         bookings.add(booking);
     }
 
+    
+    /**
+     * Returns a short string representation of the customer's details.
+     * Example: 1: Alice Wonderland (111222333, alice@example.com, 30, Female, Pref: Vegetarian)
+     *
+     * @return A short string containing the customer's ID, name, phone, email, age, gender, and preferred meal type.
+     */
+    
     // UPDATED getDetailsShort()
     public String getDetailsShort() {
         // Example: 1: Alice Wonderland (111222333, alice@example.com, 30, Female, Pref: Vegetarian)
         return id + ": " + name + " (" + phone + ", " + email + ", " + age + ", " + gender + ", Pref: " + preferredMealType.getDisplayName() + ")";
     }
 
+    
+    /**
+     * Returns a long string representation of the customer's details, including their bookings.
+     *
+     * @return A detailed string containing the customer's ID, name, phone, email, age, gender, preferred meal type,
+     * and details of their associated bookings.
+     */
+    
+    
     // UPDATED getDetailsLong()
     public String getDetailsLong() {
         StringBuilder sb = new StringBuilder();
@@ -133,6 +178,13 @@ public class Customer {
         }
         return sb.toString();
     }
+    
+    /**
+     * Cancels a booking associated with a specific flight for this customer.
+     * This method removes the booking if either the outbound or return flight matches the given flight ID.
+     *
+     * @param flightId The ID of the flight for which to cancel the booking.
+     */
 
     public void cancelBookingForFlight(int flightId) {
         bookings.removeIf(booking ->
@@ -140,6 +192,13 @@ public class Customer {
             (booking.getReturnFlight() != null && booking.getReturnFlight().getId() == flightId)
         );
     }
+    
+    /**
+     * Checks if the customer has a booking for a given flight.
+     *
+     * @param flight The flight to check for a booking.
+     * @return true if the customer has a booking for the specified flight (either as an outbound or return flight), false otherwise.
+     */
 
     public boolean hasBookingForFlight(Flight flight) {
         for (Booking booking : bookings) {

@@ -12,12 +12,17 @@ public interface Command {
         + "\tlistallflights                            print all flights (including deleted)\n"
         + "\tlistcustomers                             print all active customers\n"
         + "\tlistallcustomers                          print all customers (including deleted)\n"
+        + "\tlistmeals                                 print all active meals\n" // NEW
+        + "\tlistallmeals                              print all meals (including deleted)\n" // NEW
         + "\taddflight                                 add a new flight\n"
         + "\tremoveflight [flight id]                  remove a flight by ID\n"
         + "\taddcustomer                               add a new customer\n"
         + "\tremovecustomer [customer id]              remove a customer by ID\n"
+        + "\taddmeal                                   add a new meal\n" // NEW
+        + "\tremovemeal [meal id]                      remove a meal by ID\n" // NEW
         + "\tshowflight [flight id]                    show flight details\n"
         + "\tshowcustomer [customer id]                show customer details\n"
+        + "\tshowmeal [meal id]                        show meal details\n" // NEW
         + "\taddbooking [customer id] [flight id]      add a new booking\n"
         + "\tcancelbooking [customer id] [flight id]   cancel a booking\n"
         + "\teditbooking [booking id] [flight id]      update a booking\n"
@@ -25,8 +30,6 @@ public interface Command {
         + "\thelp                                      prints this help message\n"
         + "\texit                                      exits the program";
 
-    // --- CRITICAL CHANGE HERE ---
-    // The execute method must now accept the BufferedReader
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException;
 
 }

@@ -9,16 +9,20 @@ import bcu.cmp5332.bookingsystem.model.CommercialClassType;
 import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.Comparator; 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.ArrayList; 
+import java.util.List; 
 
 public class FlightDataManager implements DataManager {
 
     private final String RESOURCE = "./resources/data/flights.txt";
     private final String SEPARATOR = "::";
-    private final String MAP_ENTRY_SEPARATOR = ","; // For class capacities and occupied seats
-    private final String KEY_VALUE_SEPARATOR = ":"; // For class capacities and occupied seats
+    private final String MAP_ENTRY_SEPARATOR = ",";
+    private final String KEY_VALUE_SEPARATOR = ":";
 
     @Override
     public void loadData(FlightBookingSystem fbs) throws IOException, FlightBookingSystemException {
@@ -26,40 +30,70 @@ public class FlightDataManager implements DataManager {
             int line_idx = 1;
             while (sc.hasNextLine()) {
                 String line = sc.nextLine();
-                String[] properties = line.split(SEPARATOR, -1);
-                try {
-                    int id = Integer.parseInt(properties[0].trim());
-                    String flightNumber = properties[1].trim();
-                    String origin = properties[2].trim();
-                    String destination = properties[3].trim();
-                    LocalDate departureDate = LocalDate.parse(properties[4].trim());
-                    BigDecimal economyPrice = new BigDecimal(properties[5].trim());
-                    int totalCapacity = Integer.parseInt(properties[6].trim());
-                    FlightType flightType = FlightType.valueOf(properties[7].trim());
+                // Skip empty lines in the data file
+                if (line.trim().isEmpty()) {
+                    line_idx++;
+                    continue;
+                }
 
-                    Map<CommercialClassType, Integer> classCapacities = null;
-                    if (flightType == FlightType.COMMERCIAL && properties.length > 8 && !properties[8].trim().isEmpty()) {
-                        classCapacities = new HashMap<>();
-                        String capacitiesString = properties[8].trim();
-                        String[] entries = capacitiesString.split(MAP_ENTRY_SEPARATOR);
-                        for (String entry : entries) {
-                            String[] keyValue = entry.split(KEY_VALUE_SEPARATOR);
-                            if (keyValue.length == 2) {
-                                CommercialClassType classType = CommercialClassType.valueOf(keyValue[0].trim());
-                                int capacity = Integer.parseInt(keyValue[1].trim());
-                                classCapacities.put(classType, capacity);
+                String[] properties = line.split(SEPARATOR, -1);
+                
+                // Declare variables outside the inner try-catch, initializing to a safe default where needed
+                int id;
+                String flightNumber;
+                String origin;
+                String destination;
+                LocalDate departureDate; 
+                BigDecimal economyPrice;
+                int totalCapacity;
+                FlightType flightType;
+                Map<CommercialClassType, Integer> classCapacities = null; 
+                boolean deleted = false;
+                Map<CommercialClassType, Integer> occupiedSeatsByClass = new HashMap<>(); 
+
+                try {
+                    // All parsing logic for a single line
+                    id = Integer.parseInt(properties[0].trim());
+                    flightNumber = properties[1].trim();
+                    origin = properties[2].trim();
+                    destination = properties[3].trim();
+                    
+                    try {
+                        // This handles the 'null' literal gracefully now that Flight constructor is fixed
+                        departureDate = LocalDate.parse(properties[4].trim());
+                    } catch (DateTimeParseException e) {
+                        throw new FlightBookingSystemException("Invalid departure date format for flight ID " + id + " on line " + line_idx + ": '" + properties[4].trim() + "' - " + e.getMessage(), e);
+                    }
+                    
+                    economyPrice = new BigDecimal(properties[5].trim());
+                    totalCapacity = Integer.parseInt(properties[6].trim());
+                    flightType = FlightType.valueOf(properties[7].trim());
+
+                    if (flightType == FlightType.COMMERCIAL) {
+                        // Ensure properties[8] exists and is not empty before parsing classCapacities
+                        if (properties.length > 8 && !properties[8].trim().isEmpty()) {
+                            classCapacities = new HashMap<>(); 
+                            String capacitiesString = properties[8].trim();
+                            String[] entries = capacitiesString.split(MAP_ENTRY_SEPARATOR);
+                            for (String entry : entries) {
+                                String[] keyValue = entry.split(KEY_VALUE_SEPARATOR);
+                                if (keyValue.length == 2) {
+                                    CommercialClassType classType = CommercialClassType.valueOf(keyValue[0].trim());
+                                    int capacity = Integer.parseInt(keyValue[1].trim());
+                                    classCapacities.put(classType, capacity);
+                                }
                             }
+                        } else {
+                            classCapacities = null; 
                         }
                     }
 
-                    boolean deleted = false;
-                    if (properties.length > 9) { // Check for 'deleted' property
+                    if (properties.length > 9) {
                         deleted = Boolean.parseBoolean(properties[9].trim());
                     }
 
-                    // NEW: Load occupied seats by class
-                    Map<CommercialClassType, Integer> occupiedSeatsByClass = new HashMap<>();
                     if (properties.length > 10 && !properties[10].trim().isEmpty()) {
+                        occupiedSeatsByClass = new HashMap<>(); 
                         String occupiedSeatsString = properties[10].trim();
                         String[] entries = occupiedSeatsString.split(MAP_ENTRY_SEPARATOR);
                         for (String entry : entries) {
@@ -71,18 +105,30 @@ public class FlightDataManager implements DataManager {
                             }
                         }
                     }
+                    
+                    Flight flight;
+                    if (flightType == FlightType.BUDGET) {
+                        flight = new Flight(id, flightNumber, origin, destination,
+                                            departureDate, economyPrice, totalCapacity);
+                    } else { // Commercial
+                        flight = new Flight(id, flightNumber, origin, destination,
+                                            departureDate, economyPrice, totalCapacity,
+                                            flightType, classCapacities); 
+                    }
 
-
-                    Flight flight = new Flight(id, flightNumber, origin, destination,
-                                               departureDate, economyPrice, totalCapacity,
-                                               flightType, classCapacities);
                     flight.setDeleted(deleted);
-                    flight.setOccupiedSeatsByClass(occupiedSeatsByClass); // Set occupied seats
+                    if (!occupiedSeatsByClass.isEmpty()) {
+                        flight.setOccupiedSeatsByClass(occupiedSeatsByClass);
+                    }
 
                     fbs.addFlight(flight);
 
-                } catch (Exception ex) {
-                    throw new FlightBookingSystemException("Error parsing flight on line " + line_idx + ": " + ex.getMessage(), ex);
+                } catch (NumberFormatException e) {
+                    throw new FlightBookingSystemException("Error parsing numeric value for flight on line " + line_idx + ": " + e.getMessage(), e);
+                } catch (IllegalArgumentException e) {
+                    throw new FlightBookingSystemException("Error parsing enum value for flight on line " + line_idx + ": " + e.getMessage(), e);
+                } catch (Exception ex) { 
+                    throw new FlightBookingSystemException("Unknown error parsing flight on line " + line_idx + ": " + ex.getMessage(), ex);
                 }
                 line_idx++;
             }
@@ -92,49 +138,57 @@ public class FlightDataManager implements DataManager {
     @Override
     public void storeData(FlightBookingSystem fbs) throws IOException {
         try (PrintWriter out = new PrintWriter(new FileWriter(RESOURCE))) {
-            for (Flight flight : fbs.getAllFlights()) { // Iterate over all flights (including deleted)
-                out.print(flight.getId() + SEPARATOR);
-                out.print(flight.getFlightNumber() + SEPARATOR);
-                out.print(flight.getOrigin() + SEPARATOR);
-                out.print(flight.getDestination() + SEPARATOR);
-                out.print(flight.getDepartureDate() + SEPARATOR);
-                out.print(flight.getEconomyPrice() + SEPARATOR);
-                out.print(flight.getCapacity() + SEPARATOR);
-                out.print(flight.getFlightType() + SEPARATOR);
+            for (Flight flight : fbs.getAllFlights()) {
+                out.print(flight.getId());
+                out.print(SEPARATOR + flight.getFlightNumber());
+                out.print(SEPARATOR + flight.getOrigin());
+                out.print(SEPARATOR + flight.getDestination());
+                
+                if (flight.getDepartureDate() != null) {
+                    out.print(SEPARATOR + flight.getDepartureDate());
+                } else {
+                    out.print(SEPARATOR + "null"); 
+                }
+                
+                out.print(SEPARATOR + flight.getEconomyPrice());
+                out.print(SEPARATOR + flight.getCapacity());
+                out.print(SEPARATOR + flight.getFlightType());
 
-                // Store class capacities
+                // Class capacities string - either actual capacities or empty for BUDGET
+                StringBuilder classCapacitiesSb = new StringBuilder();
                 if (flight.getFlightType() == FlightType.COMMERCIAL) {
                     Map<CommercialClassType, Integer> capacities = flight.getClassCapacities();
-                    StringBuilder sb = new StringBuilder();
+                    List<Map.Entry<CommercialClassType, Integer>> sortedCapacities = new ArrayList<>(capacities.entrySet());
+                    sortedCapacities.sort(Comparator.comparing(entry -> entry.getKey().ordinal())); 
+                    
                     boolean first = true;
-                    for (Map.Entry<CommercialClassType, Integer> entry : capacities.entrySet()) {
+                    for (Map.Entry<CommercialClassType, Integer> entry : sortedCapacities) {
                         if (!first) {
-                            sb.append(MAP_ENTRY_SEPARATOR);
+                            classCapacitiesSb.append(MAP_ENTRY_SEPARATOR);
                         }
-                        sb.append(entry.getKey().name()).append(KEY_VALUE_SEPARATOR).append(entry.getValue());
+                        classCapacitiesSb.append(entry.getKey().name()).append(KEY_VALUE_SEPARATOR).append(entry.getValue());
                         first = false;
                     }
-                    out.print(sb.toString());
                 }
-                out.print(SEPARATOR); // Always output separator for class capacities, even if empty
+                out.print(SEPARATOR + classCapacitiesSb.toString()); 
 
-                // Store deleted status
-                out.print(flight.isDeleted() + SEPARATOR);
+                out.print(SEPARATOR + flight.isDeleted());
 
-                // NEW: Store occupied seats by class
+                // Occupied seats map
+                StringBuilder occupiedSeatsSb = new StringBuilder();
                 Map<CommercialClassType, Integer> occupiedSeats = flight.getOccupiedSeatsMap();
-                StringBuilder sbOccupied = new StringBuilder();
+                List<Map.Entry<CommercialClassType, Integer>> sortedOccupiedSeats = new ArrayList<>(occupiedSeats.entrySet());
+                sortedOccupiedSeats.sort(Comparator.comparing(entry -> entry.getKey().ordinal())); 
+
                 boolean firstOccupied = true;
-                for (Map.Entry<CommercialClassType, Integer> entry : occupiedSeats.entrySet()) {
+                for (Map.Entry<CommercialClassType, Integer> entry : sortedOccupiedSeats) {
                     if (!firstOccupied) {
-                        sbOccupied.append(MAP_ENTRY_SEPARATOR);
+                        occupiedSeatsSb.append(MAP_ENTRY_SEPARATOR);
                     }
-                    sbOccupied.append(entry.getKey().name()).append(KEY_VALUE_SEPARATOR).append(entry.getValue());
+                    occupiedSeatsSb.append(entry.getKey().name()).append(KEY_VALUE_SEPARATOR).append(entry.getValue());
                     firstOccupied = false;
                 }
-                out.print(sbOccupied.toString());
-
-                out.println();
+                out.println(SEPARATOR + occupiedSeatsSb.toString()); 
             }
         }
     }

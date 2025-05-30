@@ -1,31 +1,40 @@
 package bcu.cmp5332.bookingsystem.model;
 
-import java.math.BigDecimal;
-
 public enum CommercialClassType {
-    ECONOMY("Economy", BigDecimal.valueOf(1.0)),
-    PREMIUM_ECONOMY("Premium Economy", BigDecimal.valueOf(1.6)), // 60% more
-    BUSINESS("Business", BigDecimal.valueOf(3.5)), // 3.5 times economy
-    FIRST("First", BigDecimal.valueOf(7.5)); // 7.5 times economy
+    ECONOMY("Economy"),
+    PREMIUM_ECONOMY("Premium Economy"),
+    BUSINESS("Business"),
+    FIRST("First");
+    // Do NOT add a 'NONE' value here, as it's not a valid booking class.
 
     private final String className;
-    private final BigDecimal multiplier;
+    private final double multiplier;
 
-    CommercialClassType(String className, BigDecimal multiplier) {
+    CommercialClassType(String className) {
         this.className = className;
-        this.multiplier = multiplier;
+        switch (className) {
+            case "Economy":
+                this.multiplier = 1.0;
+                break;
+            case "Premium Economy":
+                this.multiplier = 1.5;
+                break;
+            case "Business":
+                this.multiplier = 2.5;
+                break;
+            case "First":
+                this.multiplier = 4.0;
+                break;
+            default:
+                this.multiplier = 1.0;
+        }
     }
 
     public String getClassName() {
         return className;
     }
 
-    public BigDecimal getMultiplier() {
+    public double getMultiplier() {
         return multiplier;
-    }
-
-    @Override
-    public String toString() {
-        return className;
     }
 }

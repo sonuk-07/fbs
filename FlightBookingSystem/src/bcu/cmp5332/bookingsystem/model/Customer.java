@@ -9,20 +9,22 @@ public class Customer {
     private String name;
     private String phone;
     private String email;
-    private int age;    // NEW FIELD
-    private String gender; // NEW FIELD (consider using an enum for Gender if you want to restrict options)
+    private int age;
+    private String gender;
+    private MealType preferredMealType; // NEW FIELD: Customer's preferred meal type
     private boolean isDeleted;
     private final List<Booking> bookings = new ArrayList<>();
 
-    // --- UPDATED CONSTRUCTOR ---
-    public Customer(int id, String name, String phone, String email, int age, String gender) {
+    // UPDATED CONSTRUCTOR
+    public Customer(int id, String name, String phone, String email, int age, String gender, MealType preferredMealType) {
         super();
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.email = email;
-        this.age = age;        // INITIALIZE NEW FIELD
-        this.gender = gender;  // INITIALIZE NEW FIELD
+        this.age = age;
+        this.gender = gender;
+        this.preferredMealType = preferredMealType; // Initialize new field
         this.isDeleted = false;
     }
 
@@ -58,7 +60,6 @@ public class Customer {
         this.phone = phone;
     }
 
-    // --- NEW GETTERS AND SETTERS FOR AGE AND GENDER ---
     public int getAge() {
         return age;
     }
@@ -74,7 +75,15 @@ public class Customer {
     public void setGender(String gender) {
         this.gender = gender;
     }
-    // --- END NEW GETTERS AND SETTERS ---
+
+    // NEW GETTER AND SETTER for Preferred Meal Type
+    public MealType getPreferredMealType() {
+        return preferredMealType;
+    }
+
+    public void setPreferredMealType(MealType preferredMealType) {
+        this.preferredMealType = preferredMealType;
+    }
 
     public boolean isDeleted() {
         return isDeleted;
@@ -92,38 +101,36 @@ public class Customer {
         bookings.add(booking);
     }
 
-    // --- UPDATED getDetailsShort() ---
+    // UPDATED getDetailsShort()
     public String getDetailsShort() {
-        // Example: 1: Alice Wonderland (111222333, alice@example.com, 30, Female)
-        return id + ": " + name + " (" + phone + ", " + email + ", " + age + ", " + gender + ")";
+        // Example: 1: Alice Wonderland (111222333, alice@example.com, 30, Female, Pref: Vegetarian)
+        return id + ": " + name + " (" + phone + ", " + email + ", " + age + ", " + gender + ", Pref: " + preferredMealType.getDisplayName() + ")";
     }
 
-    // --- UPDATED getDetailsLong() ---
+    // UPDATED getDetailsLong()
     public String getDetailsLong() {
         StringBuilder sb = new StringBuilder();
         sb.append("Customer ID: ").append(id)
           .append("\nName: ").append(name)
           .append("\nPhone: ").append(phone)
           .append("\nEmail: ").append(email)
-          .append("\nAge: ").append(age)    // ADD AGE
-          .append("\nGender: ").append(gender) // ADD GENDER
+          .append("\nAge: ").append(age)
+          .append("\nGender: ").append(gender)
+          .append("\nPreferred Meal Type: ").append(preferredMealType.getDisplayName()) // Display preferred meal type
           .append("\nBookings: ").append(bookings.size());
 
         for (Booking booking : bookings) {
-            // Handle outbound flight info if exists
             if (booking.getOutboundFlight() != null) {
                 sb.append("\n - Outbound Flight ID: ").append(booking.getOutboundFlight().getId())
                   .append(", Date: ").append(booking.getBookingDate())
                   .append(", Class: ").append(booking.getBookedClass().getClassName());
             }
-            // Handle return flight info if exists
             if (booking.getReturnFlight() != null) {
                 sb.append("\n - Return Flight ID: ").append(booking.getReturnFlight().getId())
                   .append(", Date: ").append(booking.getBookingDate())
                   .append(", Class: ").append(booking.getBookedClass().getClassName());
             }
         }
-
         return sb.toString();
     }
 

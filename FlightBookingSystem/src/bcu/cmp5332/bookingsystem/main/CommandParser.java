@@ -4,226 +4,300 @@ import bcu.cmp5332.bookingsystem.commands.*;
 import bcu.cmp5332.bookingsystem.model.CommercialClassType;
 import bcu.cmp5332.bookingsystem.model.FlightType;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
+import bcu.cmp5332.bookingsystem.model.MealType; // Still needed for addmeal command
 
 import java.io.BufferedReader;
 import java.io.IOException;
-// REMOVE THIS IF YOU HAD IT: import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommandParser {
 
-    // --- CRITICAL CHANGE HERE ---
-    // The parse method must accept the BufferedReader passed from Main.java
+    private static final Pattern ADDBOOKING_PATTERN = Pattern.compile("^addbooking\\s+(\\d+)\\s+(\\d+)(?:\\s+(\\d+))?$");
+
     public static Command parse(String line, FlightBookingSystem fbs, BufferedReader reader) throws IOException, FlightBookingSystemException {
-        try {
-            String[] parts = line.trim().split(" ", 3);
-            String cmd = parts[0].toLowerCase(); // case-insensitive
+        String[] parts = line.trim().split(" ", 2); // Split into command and argument part
+        String cmd = parts[0].toLowerCase();
 
-            // --- CRITICAL CHANGE HERE ---
-            // REMOVE the creation of BufferedReader here. It should be passed in from Main.
-            // BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-            switch (cmd) {
-                case "addflight":
-                    System.out.print("Flight Number: ");
-                    String flightNumber = reader.readLine(); // Use the passed reader
-                    System.out.print("Origin: ");
-                    String origin = reader.readLine(); // Use the passed reader
-                    System.out.print("Destination: ");
-                    String destination = reader.readLine(); // Use the passed reader
-                    LocalDate departureDate = parseDateWithAttempts(reader); // Use the passed reader
-
-                    System.out.print("Economy Price: ");
-                    String economyPriceStr = reader.readLine(); // Use the passed reader
-                    BigDecimal economyPrice;
-                    try {
-                        economyPrice = new BigDecimal(economyPriceStr);
-                    } catch (NumberFormatException e) {
-                        throw new FlightBookingSystemException("Invalid price format. Please enter a number.");
+        switch (cmd) {
+            case "addflight":
+                System.out.print("Flight Number: ");
+                String flightNumber = reader.readLine();
+                System.out.print("Origin: ");
+                String origin = reader.readLine();
+                System.out.print("Destination: ");
+                String destination = reader.readLine();
+                LocalDate departureDate = parseDateWithAttempts(reader);
+                System.out.print("Economy Price: ");
+                BigDecimal economyPrice;
+                try {
+                    economyPrice = new BigDecimal(reader.readLine());
+                    if (economyPrice.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new FlightBookingSystemException("Economy price cannot be negative.");
                     }
-
-                    System.out.print("Total Capacity: ");
-                    int capacity;
-                    try {
-                        capacity = Integer.parseInt(reader.readLine()); // Use the passed reader
-                        if (capacity <= 0) {
-                            throw new FlightBookingSystemException("Capacity must be a positive integer.");
-                        }
-                    } catch (NumberFormatException e) {
-                        throw new FlightBookingSystemException("Invalid capacity format. Please enter an integer.");
+                } catch (NumberFormatException e) {
+                    throw new FlightBookingSystemException("Invalid price format. Please enter a number.");
+                }
+                System.out.print("Total Capacity: ");
+                int totalCapacity;
+                try {
+                    totalCapacity = Integer.parseInt(reader.readLine());
+                    if (totalCapacity <= 0) {
+                        throw new FlightBookingSystemException("Total capacity must be a positive number.");
                     }
+                } catch (NumberFormatException e) {
+                    throw new FlightBookingSystemException("Invalid capacity format. Please enter an integer.");
+                }
 
-                    System.out.print("Flight Type (BUDGET/COMMERCIAL): ");
-                    String flightTypeInput = reader.readLine().toUpperCase(); // Use the passed reader
-                    FlightType flightType;
-                    try {
-                        flightType = FlightType.valueOf(flightTypeInput);
-                    } catch (IllegalArgumentException e) {
-                        throw new FlightBookingSystemException("Invalid flight type. Must be BUDGET or COMMERCIAL.");
-                    }
+                System.out.print("Flight Type (BUDGET/COMMERCIAL): ");
+                String flightTypeInput = reader.readLine().trim().toUpperCase();
+                FlightType flightType;
+                try {
+                    flightType = FlightType.valueOf(flightTypeInput);
+                } catch (IllegalArgumentException e) {
+                    throw new FlightBookingSystemException("Invalid flight type. Must be BUDGET or COMMERCIAL.");
+                }
 
-                    if (flightType == FlightType.BUDGET) {
-                        return new AddFlight(flightNumber, origin, destination, departureDate, economyPrice, capacity);
-                    } else {
-                        System.out.print("Use custom class capacities? (yes/no - default is no): ");
-                        String customCapacityChoice = reader.readLine().trim().toLowerCase(); // Use the passed reader
-                        if ("yes".equals(customCapacityChoice)) {
-                            Map<CommercialClassType, Integer> customCapacities = new HashMap<>();
-                            int remainingCapacity = capacity;
-                            System.out.println("Enter capacities for each class (current total capacity: " + capacity + ", remaining: " + remainingCapacity + "):");
-                            for (CommercialClassType classType : CommercialClassType.values()) {
-                                System.out.print("Capacity for " + classType.getClassName() + " (current remaining: " + remainingCapacity + "): ");
-                                try {
-                                    int classCapacity = Integer.parseInt(reader.readLine()); // Use the passed reader
-                                    if (classCapacity < 0 || classCapacity > remainingCapacity) {
-                                        throw new FlightBookingSystemException("Invalid capacity for " + classType.getClassName() + ". Must be between 0 and " + remainingCapacity + ".");
-                                    }
-                                    customCapacities.put(classType, classCapacity);
-                                    remainingCapacity -= classCapacity;
-                                } catch (NumberFormatException e) {
-                                    throw new FlightBookingSystemException("Invalid number for capacity. Please enter an integer.");
+                Map<CommercialClassType, Integer> classCapacities = null;
+                if (flightType == FlightType.COMMERCIAL) {
+                    System.out.print("Use custom class capacities? (yes/no - default is no): ");
+                    String customCapacityChoice = reader.readLine().trim().toLowerCase();
+                    if ("yes".equals(customCapacityChoice)) {
+                        classCapacities = new HashMap<>();
+                        int remainingCapacity = totalCapacity;
+                        System.out.println("Enter capacities for each class. Remaining total capacity: " + remainingCapacity);
+                        for (CommercialClassType classType : CommercialClassType.values()) {
+                            System.out.print("Capacity for " + classType.name() + " (current remaining: " + remainingCapacity + "): ");
+                            try {
+                                int classCapacity = Integer.parseInt(reader.readLine());
+                                if (classCapacity < 0) {
+                                    throw new FlightBookingSystemException("Capacity cannot be negative.");
                                 }
+                                if (classCapacity > remainingCapacity) {
+                                    throw new FlightBookingSystemException("Capacity for " + classType.name() + " exceeds remaining total capacity.");
+                                }
+                                classCapacities.put(classType, classCapacity);
+                                remainingCapacity -= classCapacity;
+                            } catch (NumberFormatException e) {
+                                throw new FlightBookingSystemException("Invalid capacity format for " + classType.name() + ". Please enter an integer.");
                             }
-                             if (remainingCapacity != 0) {
-                                System.err.println("Warning: Sum of specified class capacities (" + (capacity - remainingCapacity) + ") does not match total flight capacity (" + capacity + "). Using provided values.");
-                            }
-                            return new AddFlight(flightNumber, origin, destination, departureDate, economyPrice, capacity, customCapacities);
-                        } else {
-                            return new AddFlight(flightNumber, origin, destination, departureDate, economyPrice, capacity, flightType);
+                        }
+                        if (remainingCapacity > 0) {
+                            System.out.println("Warning: " + remainingCapacity + " capacity not assigned to any class.");
                         }
                     }
+                }
+                // AddFlight constructor no longer takes mealQuantities
+                if (flightType == FlightType.BUDGET) {
+                    return new AddFlight(flightNumber, origin, destination, departureDate, economyPrice, totalCapacity);
+                } else { // Commercial
+                    return new AddFlight(flightNumber, origin, destination, departureDate, economyPrice, totalCapacity, flightType, classCapacities);
+                }
 
-                 // Inside CommandParser.java, within the parse method:
-
-                case "addcustomer":
-                    System.out.print("Customer Name: ");
-                    String name = reader.readLine();
-                    System.out.print("Customer Phone: ");
-                    String phone = reader.readLine();
-                    System.out.print("Customer Email: ");
-                    String email = reader.readLine();
-                    // --- NEW INPUTS ---
-                    System.out.print("Customer Age: ");
-                    int age;
+            case "addcustomer":
+                System.out.print("Customer Name: ");
+                String customerName = reader.readLine();
+                System.out.print("Customer Phone: ");
+                String customerPhone = reader.readLine();
+                System.out.print("Customer Email: ");
+                String customerEmail = reader.readLine();
+                System.out.print("Customer Age: ");
+                int customerAge;
+                try {
+                    customerAge = Integer.parseInt(reader.readLine());
+                    if (customerAge < 0) {
+                        throw new FlightBookingSystemException("Age cannot be negative.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new FlightBookingSystemException("Invalid age format. Please enter an integer.");
+                }
+                System.out.print("Customer Gender (Male/Female/Other): ");
+                String customerGender = reader.readLine();
+                // NEW: Prompt for Preferred Meal Type
+                System.out.print("Customer Preferred Meal Type (VEG/NON_VEG/VEGAN/GLUTEN_FREE/NONE - default NONE): ");
+                String preferredMealTypeInput = reader.readLine().trim().toUpperCase();
+                MealType preferredMealType;
+                if (preferredMealTypeInput.isEmpty()) {
+                    preferredMealType = MealType.NONE;
+                } else {
                     try {
-                        age = Integer.parseInt(reader.readLine());
-                        if (age < 0 || age > 120) { // Basic age validation
-                            throw new FlightBookingSystemException("Invalid age. Must be between 0 and 120.");
-                        }
-                    } catch (NumberFormatException e) {
-                        throw new FlightBookingSystemException("Invalid age format. Please enter an integer.");
+                        preferredMealType = MealType.valueOf(preferredMealTypeInput);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Invalid preferred meal type. Defaulting to NONE.");
+                        preferredMealType = MealType.NONE;
                     }
-                    System.out.print("Customer Gender (Male/Female/Other): ");
-                    String gender = reader.readLine();
-                    // --- END NEW INPUTS ---
+                }
+                // Updated AddCustomer constructor call
+                return new AddCustomer(customerName, customerPhone, customerEmail, customerAge, customerGender, preferredMealType);
 
-                    // Generate new ID for customer using the fbs instance
-                    int newCustomerId = fbs.generateNextCustomerId();
-                    // --- UPDATED AddCustomer CONSTRUCTOR CALL ---
-                    return new AddCustomer(newCustomerId, name, phone, email, age, gender);
-
-                case "removecustomer":
-                    if (parts.length < 2) {
-                        throw new FlightBookingSystemException("Usage: removecustomer <customer ID>");
+            case "addmeal":
+                System.out.print("Meal Name: ");
+                String mealName = reader.readLine();
+                System.out.print("Meal Description: ");
+                String mealDescription = reader.readLine();
+                System.out.print("Meal Price: ");
+                BigDecimal mealPrice;
+                try {
+                    mealPrice = new BigDecimal(reader.readLine());
+                    if (mealPrice.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new FlightBookingSystemException("Meal price cannot be negative.");
                     }
-                    int customerIdToRemove = Integer.parseInt(parts[1]);
-                    // Commands now need the reader, so pass it to them
-                    return new RemoveCustomer(customerIdToRemove);
+                } catch (NumberFormatException e) {
+                    throw new FlightBookingSystemException("Invalid meal price format. Please enter a number.");
+                }
+                System.out.print("Meal Type (VEG/NON_VEG/VEGAN/GLUTEN_FREE/NONE): ");
+                String mealTypeInput = reader.readLine().trim().toUpperCase();
+                MealType mealType;
+                try {
+                    mealType = MealType.valueOf(mealTypeInput);
+                } catch (IllegalArgumentException e) {
+                    throw new FlightBookingSystemException("Invalid meal type. Must be one of: " + Arrays.toString(MealType.values()));
+                }
+                return new AddMeal(mealName, mealDescription, mealPrice, mealType);
 
-                case "listflights":
-                    // Commands now need the reader, so pass it to them
-                    return new ListFlights();
+            case "addbooking":
+                Matcher matcher = ADDBOOKING_PATTERN.matcher(line);
+                if (!matcher.matches()) {
+                    throw new FlightBookingSystemException("Usage: addbooking <customer ID> <outbound flight ID> [return flight ID]");
+                }
+                int customerId = Integer.parseInt(matcher.group(1));
+                int outboundFlightId = Integer.parseInt(matcher.group(2));
+                Integer returnFlightId = null;
+                if (matcher.group(3) != null) {
+                    returnFlightId = Integer.parseInt(matcher.group(3));
+                }
 
-                case "listallflights":
-                    // Commands now need the reader, so pass it to them
-                    return new ListAllFlights();
-
-                case "listcustomers":
-                    // Commands now need the reader, so pass it to them
-                    return new ListCustomers();
-
-                case "listallcustomers":
-                    // Commands now need the reader, so pass it to them
-                    return new ListAllCustomers();
-
-                case "removeflight":
-                    if (parts.length < 2) {
-                        throw new FlightBookingSystemException("Usage: removeflight <flight ID>");
+                System.out.print("Enter desired booking class (ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST - default ECONOMY): ");
+                String classInput = reader.readLine().trim().toUpperCase();
+                CommercialClassType selectedClass;
+                if (classInput.isEmpty()) {
+                    selectedClass = CommercialClassType.ECONOMY;
+                } else {
+                    try {
+                        selectedClass = CommercialClassType.valueOf(classInput);
+                    } catch (IllegalArgumentException e) {
+                        throw new FlightBookingSystemException("Invalid class type. Please choose from ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST.");
                     }
-                    int flightIdToRemove = Integer.parseInt(parts[1]);
-                    // Commands now need the reader, so pass it to them
-                    return new RemoveFlight(flightIdToRemove);
+                }
+                return new AddBooking(customerId, outboundFlightId, returnFlightId, selectedClass);
 
-                case "loadgui":
-                    return new LoadGUI();
+            case "cancelbooking":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: cancelbooking <customer ID> <flight ID>");
+                }
+                String[] cancelParts = parts[1].split(" ");
+                if (cancelParts.length != 2) {
+                    throw new FlightBookingSystemException("Usage: cancelbooking <customer ID> <flight ID>");
+                }
+                int cancelCustomerId = Integer.parseInt(cancelParts[0]);
+                int cancelFlightId = Integer.parseInt(cancelParts[1]);
+                return new CancelBooking(cancelCustomerId, cancelFlightId);
+                
+            case "editbooking":
+                if (parts.length < 3) {
+                    throw new FlightBookingSystemException("Usage: editbooking <customer ID> <flight ID>");
+                }
+                int editCustomerId = Integer.parseInt(parts[1]);
+                int editFlightId = Integer.parseInt(parts[2]);
+                // Commands now need the reader, so pass it to them
+                return new EditBooking(editCustomerId, editFlightId);
 
-                case "help":
-                    return new Help();
-                case "exit":
-                    return new Exit();
+            case "rebookflight":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: rebookflight <customer ID> <old flight ID> <new flight ID> <new class>");
+                }
+                String[] rebookParts = parts[1].split(" ");
+                if (rebookParts.length != 4) {
+                    throw new FlightBookingSystemException("Usage: rebookflight <customer ID> <old flight ID> <new flight ID> <new class>");
+                }
+                int rebookCustomerId = Integer.parseInt(rebookParts[0]);
+                int oldFlightId = Integer.parseInt(rebookParts[1]);
+                int newFlightId = Integer.parseInt(rebookParts[2]);
+                CommercialClassType newClass;
+                try {
+                    newClass = CommercialClassType.valueOf(rebookParts[3].trim().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new FlightBookingSystemException("Invalid new class. Please choose from ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST.");
+                }
+                return new RebookFlight(rebookCustomerId, oldFlightId, newFlightId, newClass);
 
-                case "addbooking":
-                    if (parts.length < 3) {
-                        throw new FlightBookingSystemException("Usage: addbooking <customer ID> <flight ID>");
-                    }
-                    int customerId = Integer.parseInt(parts[1]);
-                    int flightId = Integer.parseInt(parts[2]);
+            case "showflight":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: showflight <flight ID>");
+                }
+                int flightId = Integer.parseInt(parts[1]);
+                return new ShowFlight(flightId);
 
-                    System.out.print("Enter desired booking class (ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST - default ECONOMY): ");
-                    String classInput = reader.readLine().trim().toUpperCase(); // Use the passed reader
-                    CommercialClassType selectedClass = CommercialClassType.ECONOMY;
+            case "showcustomer":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: showcustomer <customer ID>");
+                }
+                customerId = Integer.parseInt(parts[1]);
+                return new ShowCustomer(customerId);
 
-                    if (!classInput.isEmpty()) {
-                        try {
-                            selectedClass = CommercialClassType.valueOf(classInput);
-                        } catch (IllegalArgumentException e) {
-                            System.out.println("Invalid class entered. Defaulting to ECONOMY.");
-                        }
-                    }
-                    // Commands now need the reader, so pass it to them (no change needed here as it was already fixed)
-                    return new AddBooking(customerId, flightId, selectedClass);
+            case "showmeal":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: showmeal <meal ID>");
+                }
+                int mealId = Integer.parseInt(parts[1]);
+                return new ShowMeal(mealId);
 
-                case "editbooking":
-                    if (parts.length < 3) {
-                        throw new FlightBookingSystemException("Usage: editbooking <customer ID> <flight ID>");
-                    }
-                    int editCustomerId = Integer.parseInt(parts[1]);
-                    int editFlightId = Integer.parseInt(parts[2]);
-                    // Commands now need the reader, so pass it to them
-                    return new EditBooking(editCustomerId, editFlightId);
+            case "listflights":
+                return new ListFlights();
 
-                case "showflight":
-                    if (parts.length < 2) throw new FlightBookingSystemException("Usage: showflight <flight ID>");
-                    // Commands now need the reader, so pass it to them
-                    return new ShowFlight(Integer.parseInt(parts[1]));
+            case "listallflights":
+                return new ListAllFlights();
 
-                case "showcustomer":
-                    if (parts.length < 2) throw new FlightBookingSystemException("Usage: showcustomer <customer ID>");
-                    // Commands now need the reader, so pass it to them
-                    return new ShowCustomer(Integer.parseInt(parts[1]));
+            case "listcustomers":
+                return new ListCustomers();
 
-                case "cancelbooking":
-                    if (parts.length < 3) {
-                        throw new FlightBookingSystemException("Usage: cancelbooking <customer ID> <flight ID>");
-                    }
-                    int cancelCustomerId = Integer.parseInt(parts[1]);
-                    int cancelFlightId = Integer.parseInt(parts[2]);
-                    // Commands now need the reader, so pass it to them
-                    return new CancelBooking(cancelCustomerId, cancelFlightId);
+            case "listallcustomers":
+                return new ListAllCustomers();
 
-                default:
-                    throw new FlightBookingSystemException("Unknown command.");
-            }
-        } catch (NumberFormatException ex) {
-            throw new FlightBookingSystemException("Invalid number format in command.");
+            case "listmeals":
+                return new ListMeals();
+
+            case "listallmeals":
+                return new ListAllMeals();
+
+            case "removeflight":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: removeflight <flight ID>");
+                }
+                flightId = Integer.parseInt(parts[1]);
+                return new RemoveFlight(flightId);
+
+            case "removecustomer":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: removecustomer <customer ID>");
+                }
+                customerId = Integer.parseInt(parts[1]);
+                return new RemoveCustomer(customerId);
+
+            case "removemeal":
+                if (parts.length < 2) {
+                    throw new FlightBookingSystemException("Usage: removemeal <meal ID>");
+                }
+                mealId = Integer.parseInt(parts[1]);
+                return new RemoveMeal(mealId);
+
+            case "help":
+                return new Help();
+
+            case "exit":
+                return new Exit();
+
+            default:
+                throw new FlightBookingSystemException("Unknown command.");
         }
     }
 
-    // parseDateWithAttempts already accepts BufferedReader, no change needed here.
     private static LocalDate parseDateWithAttempts(BufferedReader br, int attempts)
             throws IOException, FlightBookingSystemException {
         if (attempts < 1) {

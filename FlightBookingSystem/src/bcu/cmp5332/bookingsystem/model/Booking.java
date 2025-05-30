@@ -1,8 +1,8 @@
 package bcu.cmp5332.bookingsystem.model;
 
-import java.math.BigDecimal; // Import BigDecimal
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter; // For formatting output
+import java.time.format.DateTimeFormatter;
 
 public class Booking {
 
@@ -11,16 +11,16 @@ public class Booking {
     private Flight returnFlight;
     private LocalDate bookingDate;
     private CommercialClassType bookedClass;
-    private BigDecimal bookedPriceOutbound; // NEW: Store the dynamic price for outbound flight
-    private BigDecimal bookedPriceReturn;   // NEW: Store the dynamic price for return flight
-    private BigDecimal cancellationFee;     // NEW: Store the cancellation fee
-    private BigDecimal rebookFee;           // NEW: Store the rebook fee
+    private BigDecimal bookedPriceOutbound;
+    private BigDecimal bookedPriceReturn;
+    private BigDecimal cancellationFee;
+    private BigDecimal rebookFee;
+    private Meal meal;
 
-
-    // Main constructor for bookings
     public Booking(Customer customer, Flight outboundFlight, Flight returnFlight,
                    LocalDate bookingDate, CommercialClassType bookedClass,
-                   BigDecimal bookedPriceOutbound, BigDecimal bookedPriceReturn) { // Added price parameters
+                   BigDecimal bookedPriceOutbound, BigDecimal bookedPriceReturn,
+                   Meal meal) {
         this.customer = customer;
         this.outboundFlight = outboundFlight;
         this.returnFlight = returnFlight;
@@ -28,96 +28,44 @@ public class Booking {
         this.bookedClass = bookedClass;
         this.bookedPriceOutbound = bookedPriceOutbound;
         this.bookedPriceReturn = bookedPriceReturn;
-        this.cancellationFee = BigDecimal.ZERO; // Initialize to zero
-        this.rebookFee = BigDecimal.ZERO;       // Initialize to zero
-    }
-
-    // Existing constructor (consider removing if the above is always used now, or adapt it)
-    public Booking(Customer customer, Flight flight, LocalDate bookingDate, CommercialClassType bookedClass) {
-        this.customer = customer;
-        this.outboundFlight = flight;
-        this.returnFlight = null; // Assuming this constructor means no return flight
-        this.bookingDate = bookingDate;
-        this.bookedClass = bookedClass;
-        this.bookedPriceOutbound = BigDecimal.ZERO; // Default or calculate if this constructor is still used for new bookings
-        this.bookedPriceReturn = BigDecimal.ZERO;
         this.cancellationFee = BigDecimal.ZERO;
         this.rebookFee = BigDecimal.ZERO;
+        this.meal = meal;
     }
 
-
-    public Customer getCustomer() {
-        return customer;
+    public Booking(Customer customer, Flight flight, LocalDate bookingDate, CommercialClassType bookedClass) {
+        this(customer, flight, null, bookingDate, bookedClass, BigDecimal.ZERO, BigDecimal.ZERO, null);
     }
 
-    public Flight getOutboundFlight() {
-        return outboundFlight;
-    }
+    public Customer getCustomer() { return customer; }
+    public Flight getOutboundFlight() { return outboundFlight; }
+    public Flight getReturnFlight() { return returnFlight; }
+    public LocalDate getBookingDate() { return bookingDate; }
+    public void setBookingDate(LocalDate bookingDate) { this.bookingDate = bookingDate; }
+    public CommercialClassType getBookedClass() { return bookedClass; }
+    public void setBookedClass(CommercialClassType bookedClass) { this.bookedClass = bookedClass; }
+    public BigDecimal getBookedPriceOutbound() { return bookedPriceOutbound; }
+    public BigDecimal getBookedPriceReturn() { return bookedPriceReturn; }
+    public void setBookedPriceOutbound(BigDecimal bookedPriceOutbound) { this.bookedPriceOutbound = bookedPriceOutbound; }
+    public void setBookedPriceReturn(BigDecimal bookedPriceReturn) { this.bookedPriceReturn = bookedPriceReturn; }
+    public BigDecimal getCancellationFee() { return cancellationFee; }
+    public void setCancellationFee(BigDecimal cancellationFee) { this.cancellationFee = cancellationFee; }
+    public BigDecimal getRebookFee() { return rebookFee; }
+    public void setRebookFee(BigDecimal rebookFee) { this.rebookFee = rebookFee; }
+    public Meal getMeal() { return meal; }
+    public void setMeal(Meal meal) { this.meal = meal; }
 
-    public Flight getReturnFlight() {
-        return returnFlight;
-    }
-
-    public LocalDate getBookingDate() {
-        return bookingDate;
-    }
-
-    public void setBookingDate(LocalDate bookingDate) {
-        this.bookingDate = bookingDate;
-    }
-
-    public CommercialClassType getBookedClass() {
-        return bookedClass;
-    }
-
-    public void setBookedClass(CommercialClassType bookedClass) {
-        this.bookedClass = bookedClass;
-    }
-
-    // NEW Getters for booked prices
-    public BigDecimal getBookedPriceOutbound() {
-        return bookedPriceOutbound;
-    }
-
-    public BigDecimal getBookedPriceReturn() {
-        return bookedPriceReturn;
-    }
-
-    // NEW Setters for booked prices (useful for loading data)
-    public void setBookedPriceOutbound(BigDecimal bookedPriceOutbound) {
-        this.bookedPriceOutbound = bookedPriceOutbound;
-    }
-
-    public void setBookedPriceReturn(BigDecimal bookedPriceReturn) {
-        this.bookedPriceReturn = bookedPriceReturn;
-    }
-
-    // NEW Getters and Setters for fees
-    public BigDecimal getCancellationFee() {
-        return cancellationFee;
-    }
-
-    public void setCancellationFee(BigDecimal cancellationFee) {
-        this.cancellationFee = cancellationFee;
-    }
-
-    public BigDecimal getRebookFee() {
-        return rebookFee;
-    }
-
-    public void setRebookFee(BigDecimal rebookFee) {
-        this.rebookFee = rebookFee;
-    }
-
-
+    // UPDATED getDetailsShort()
     public String getDetailsShort() {
-        // You might want to include prices and fees here too, or in getDetailsLong
+        String mealInfo = (meal != null) ? ", Meal: " + meal.getName() + " (" + meal.getType().getDisplayName() + ")" : "";
         return "Booking: Outbound " + outboundFlight.getFlightNumber() +
                ", Return " + (returnFlight != null ? returnFlight.getFlightNumber() : "N/A") +
                " - Class: " + bookedClass.getClassName() +
-               " - Total Price: £" + getTotalBookingPrice(); // New helper method
+               mealInfo +
+               " - Total Price: £" + getTotalBookingPrice();
     }
 
+    // UPDATED getDetailsLong()
     public String getDetailsLong() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         StringBuilder sb = new StringBuilder();
@@ -131,8 +79,16 @@ public class Booking {
               .append("\n  Booked Price: £").append(bookedPriceReturn);
         }
 
+        if (meal != null) {
+            sb.append("\nMeal: ").append(meal.getName())
+              .append(" (Type: ").append(meal.getType().getDisplayName()) // Display meal type
+              .append(", Price: £").append(meal.getPrice()).append(")");
+        } else {
+            sb.append("\nMeal: None");
+        }
+
         sb.append("\nBooking Date: ").append(bookingDate.format(dtf));
-        sb.append("\nTotal Booking Price: £").append(getTotalBookingPrice());
+        sb.append("\nTotal Booking Price (Flights + Meal): £").append(getTotalBookingPrice());
 
         if (cancellationFee.compareTo(BigDecimal.ZERO) > 0) {
             sb.append("\nCancellation Fee Applied: £").append(cancellationFee);
@@ -144,8 +100,11 @@ public class Booking {
         return sb.toString();
     }
 
-    // NEW: Helper method to calculate total booking price
     public BigDecimal getTotalBookingPrice() {
-        return bookedPriceOutbound.add(bookedPriceReturn).setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal total = bookedPriceOutbound.add(bookedPriceReturn);
+        if (meal != null) {
+            total = total.add(meal.getPrice());
+        }
+        return total.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }

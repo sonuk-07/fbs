@@ -16,6 +16,7 @@ public class FlightBookingSystemData {
         dataManagers.add(new FlightDataManager());
         dataManagers.add(new CustomerDataManager());
         dataManagers.add(new BookingDataManager());
+        dataManagers.add(new MealDataManager());
     }
 
     

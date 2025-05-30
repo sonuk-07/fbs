@@ -1,0 +1,3 @@
+1::Standard Veg::a basic vegetarian meal::15::VEG::false
+2::chicken delight::classic chicken dish::20::NON_VEG::false
+3::vegan power bowl::healthy plant-based option::18.50::VEGAN::true

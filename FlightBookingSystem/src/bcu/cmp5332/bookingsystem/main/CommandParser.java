@@ -97,15 +97,34 @@ public class CommandParser {
                         }
                     }
 
+                 // Inside CommandParser.java, within the parse method:
+
                 case "addcustomer":
                     System.out.print("Customer Name: ");
-                    String name = reader.readLine(); // Use the passed reader
+                    String name = reader.readLine();
                     System.out.print("Customer Phone: ");
-                    String phone = reader.readLine(); // Use the passed reader
+                    String phone = reader.readLine();
                     System.out.print("Customer Email: ");
-                    String email = reader.readLine(); // Use the passed reader
+                    String email = reader.readLine();
+                    // --- NEW INPUTS ---
+                    System.out.print("Customer Age: ");
+                    int age;
+                    try {
+                        age = Integer.parseInt(reader.readLine());
+                        if (age < 0 || age > 120) { // Basic age validation
+                            throw new FlightBookingSystemException("Invalid age. Must be between 0 and 120.");
+                        }
+                    } catch (NumberFormatException e) {
+                        throw new FlightBookingSystemException("Invalid age format. Please enter an integer.");
+                    }
+                    System.out.print("Customer Gender (Male/Female/Other): ");
+                    String gender = reader.readLine();
+                    // --- END NEW INPUTS ---
+
+                    // Generate new ID for customer using the fbs instance
                     int newCustomerId = fbs.generateNextCustomerId();
-                    return new AddCustomer(newCustomerId, name, phone, email);
+                    // --- UPDATED AddCustomer CONSTRUCTOR CALL ---
+                    return new AddCustomer(newCustomerId, name, phone, email, age, gender);
 
                 case "removecustomer":
                     if (parts.length < 2) {

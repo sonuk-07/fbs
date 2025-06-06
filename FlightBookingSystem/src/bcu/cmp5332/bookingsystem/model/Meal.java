@@ -100,8 +100,9 @@ public class Meal {
     
     // Helper methods for display (UPDATED)
     public String getDetailsShort() {
-        return id + ": " + name + " (" + type.getDisplayName() + ") " + " (£" + price + ")";
+        return id + ": " + name + " (" + type.getDisplayName() + ") " + "(£" + price + ")";
     }
+    
 
     
     /**

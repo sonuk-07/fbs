@@ -265,6 +265,9 @@ public class CommandParser {
 
             case "listallmeals":
                 return new ListAllMeals();
+                
+            case "loadgui":
+            	return new LoadGUI();
 
             case "removeflight":
                 if (parts.length < 2) {

@@ -1,31 +1,30 @@
 package bcu.cmp5332.bookingsystem.gui;
 
-import bcu.cmp5332.bookingsystem.commands.AddCustomer; // The command you provided earlier
-import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException; // For error handling
+import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.Customer;
-import bcu.cmp5332.bookingsystem.model.MealType; // To populate the preferred meal type combo box
-import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData; // For saving data
+import bcu.cmp5332.bookingsystem.model.MealType;
+import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.regex.Matcher; // For email validation
-import java.util.regex.Pattern; // For email validation
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AddCustomerWindow extends JFrame implements ActionListener {
 
     private MainWindow mw;
 
-    private JTextField nameText = new JTextField();
-    private JTextField phoneText = new JTextField();
-    private JTextField emailText = new JTextField();
-    private JTextField ageText = new JTextField();
+    private JTextField nameText = new JTextField(20); // Set preferred column width
+    private JTextField phoneText = new JTextField(20);
+    private JTextField emailText = new JTextField(20);
+    private JTextField ageText = new JTextField(5);
     private JComboBox<String> genderComboBox = new JComboBox<>(new String[]{"Male", "Female", "Other"});
-    private JComboBox<String> preferredMealTypeComboBox; // Will be populated dynamically
+    private JComboBox<String> preferredMealTypeComboBox;
 
-    private JButton addBtn = new JButton("Add");
+    private JButton addBtn = new JButton("Add Customer"); // More descriptive text
     private JButton cancelBtn = new JButton("Cancel");
 
     public AddCustomerWindow(MainWindow mw) {
@@ -33,9 +32,6 @@ public class AddCustomerWindow extends JFrame implements ActionListener {
         initialize();
     }
 
-    /**
-     * Initialize the contents of the frame.
-     */
     private void initialize() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -43,44 +39,79 @@ public class AddCustomerWindow extends JFrame implements ActionListener {
             // Handle look and feel exception
         }
 
-        setTitle("Add a New Customer");
-        setSize(450, 400); // Adjusted size
+        setTitle("Add New Customer");
+        setSize(500, 420); // Adjusted size for better spacing
+        setResizable(false); // Often good for fixed forms
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new GridLayout(7, 2, 5, 5)); // 7 rows for all fields + labels
+        // Main content panel using GridBagLayout for flexible arrangement
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding
 
-        topPanel.add(new JLabel("Name : "));
-        topPanel.add(nameText);
-        topPanel.add(new JLabel("Phone : "));
-        topPanel.add(phoneText);
-        topPanel.add(new JLabel("Email : "));
-        topPanel.add(emailText);
-        topPanel.add(new JLabel("Age : "));
-        topPanel.add(ageText);
-        topPanel.add(new JLabel("Gender : "));
-        topPanel.add(genderComboBox);
-        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 5, 8, 5); // Padding around components
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Make components fill available width
+        gbc.anchor = GridBagConstraints.WEST; // Align to the left
+
+        // Row 0: Name
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        contentPanel.add(new JLabel("Name:"), gbc);
+        gbc.gridx = 1;
+        contentPanel.add(nameText, gbc);
+
+        // Row 1: Phone
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        contentPanel.add(new JLabel("Phone:"), gbc);
+        gbc.gridx = 1;
+        contentPanel.add(phoneText, gbc);
+
+        // Row 2: Email
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        contentPanel.add(new JLabel("Email:"), gbc);
+        gbc.gridx = 1;
+        contentPanel.add(emailText, gbc);
+
+        // Row 3: Age
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        contentPanel.add(new JLabel("Age:"), gbc);
+        gbc.gridx = 1;
+        contentPanel.add(ageText, gbc);
+
+        // Row 4: Gender
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        contentPanel.add(new JLabel("Gender:"), gbc);
+        gbc.gridx = 1;
+        contentPanel.add(genderComboBox, gbc);
+
+        // Row 5: Preferred Meal Type
         // Populate preferred meal type combo box
         String[] mealTypes = new String[MealType.values().length];
         for (int i = 0; i < MealType.values().length; i++) {
             mealTypes[i] = MealType.values()[i].getDisplayName();
         }
         preferredMealTypeComboBox = new JComboBox<>(mealTypes);
-        topPanel.add(new JLabel("Preferred Meal Type : "));
-        topPanel.add(preferredMealTypeComboBox);
 
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new GridLayout(1, 3));
-        bottomPanel.add(new JLabel("     ")); // Spacer
-        bottomPanel.add(addBtn);
-        bottomPanel.add(cancelBtn);
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        contentPanel.add(new JLabel("Preferred Meal Type:"), gbc);
+        gbc.gridx = 1;
+        contentPanel.add(preferredMealTypeComboBox, gbc);
+
+        // Buttons Panel at the bottom
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10)); // Align right, add horizontal spacing
+        buttonPanel.add(addBtn);
+        buttonPanel.add(cancelBtn);
 
         addBtn.addActionListener(this);
         cancelBtn.addActionListener(this);
 
-        this.getContentPane().add(topPanel, BorderLayout.CENTER);
-        this.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
+        this.getContentPane().add(contentPanel, BorderLayout.CENTER);
+        this.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
         setLocationRelativeTo(mw); // Center window relative to MainWindow
 
         setVisible(true);
@@ -92,6 +123,7 @@ public class AddCustomerWindow extends JFrame implements ActionListener {
             addCustomer();
         } else if (ae.getSource() == cancelBtn) {
             this.setVisible(false); // Close the window
+            this.dispose(); // Release resources
         }
     }
 
@@ -104,7 +136,7 @@ public class AddCustomerWindow extends JFrame implements ActionListener {
             String preferredMealTypeName = (String) preferredMealTypeComboBox.getSelectedItem();
 
             // --- Input Validation ---
-            if (name.isEmpty() || phone.isEmpty() || email.isEmpty() || ageText.getText().trim().isEmpty() || gender.isEmpty()) {
+            if (name.isEmpty() || phone.isEmpty() || email.isEmpty() || ageText.getText().trim().isEmpty()) {
                 throw new FlightBookingSystemException("All fields must be filled out.");
             }
 
@@ -113,7 +145,7 @@ public class AddCustomerWindow extends JFrame implements ActionListener {
             try {
                 age = Integer.parseInt(ageText.getText().trim());
                 if (age <= 0 || age > 150) { // Reasonable age limits
-                    throw new FlightBookingSystemException("Age must be a positive integer and reasonable.");
+                    throw new FlightBookingSystemException("Age must be a positive integer and reasonable (1-150).");
                 }
             } catch (NumberFormatException nfe) {
                 throw new FlightBookingSystemException("Age must be a valid number.");

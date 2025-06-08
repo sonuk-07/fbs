@@ -2,33 +2,33 @@ package bcu.cmp5332.bookingsystem.gui;
 
 import bcu.cmp5332.bookingsystem.model.Booking;
 import bcu.cmp5332.bookingsystem.model.Customer;
-import bcu.cmp5332.bookingsystem.model.CommercialClassType; // For booking details
-import bcu.cmp5332.bookingsystem.model.Flight; // For flight details in bookings
+import bcu.cmp5332.bookingsystem.model.CommercialClassType;
+import bcu.cmp5332.bookingsystem.model.Flight;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.format.DateTimeFormatter; // For formatting dates
+import java.time.format.DateTimeFormatter;
 
 public class CustomerDetailsWindow extends JFrame implements ActionListener {
 
     private MainWindow mw;
     private Customer customer;
 
-    // Labels for customer details
-    private JLabel customerIdLabel = new JLabel();
-    private JLabel nameLabel = new JLabel();
-    private JLabel phoneLabel = new JLabel();
-    private JLabel emailLabel = new JLabel();
-    private JLabel ageLabel = new JLabel();
-    private JLabel genderLabel = new JLabel();
-    private JLabel preferredMealLabel = new JLabel();
-    private JLabel statusLabel = new JLabel(); // For customer's deleted status
+    private JLabel customerIdValueLabel = new JLabel();
+    private JLabel nameValueLabel = new JLabel();
+    private JLabel phoneValueLabel = new JLabel();
+    private JLabel emailValueLabel = new JLabel();
+    private JLabel ageValueLabel = new JLabel();
+    private JLabel genderValueLabel = new JLabel();
+    private JLabel preferredMealValueLabel = new JLabel();
+    private JLabel statusValueLabel = new JLabel();
 
-    // Table for bookings
     private JTable bookingsTable;
     private DefaultTableModel bookingsTableModel;
 
@@ -40,89 +40,108 @@ public class CustomerDetailsWindow extends JFrame implements ActionListener {
         initialize();
     }
 
-    /**
-     * Initialize the contents of the frame.
-     */
     private void initialize() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            // Handle look and feel exception
+            System.err.println("Failed to set LookAndFeel: " + ex);
         }
 
         setTitle("Customer Details: " + customer.getName());
-        setSize(700, 600); // Increased size to accommodate bookings table
+        setSize(800, 650);
+        setResizable(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // --- Customer Information Panel ---
-        JPanel infoPanel = new JPanel(new GridLayout(8, 2, 5, 5)); // 8 rows for details
-        infoPanel.setBorder(BorderFactory.createTitledBorder("Customer Information"));
+        JPanel infoPanel = new JPanel(new GridBagLayout());
+        infoPanel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createEtchedBorder(), "Customer Information", TitledBorder.LEFT, TitledBorder.TOP,
+            new Font("SansSerif", Font.BOLD, 14), new Color(50, 50, 150)));
 
-        infoPanel.add(new JLabel("Customer ID: "));
-        customerIdLabel.setText(String.valueOf(customer.getId()));
-        infoPanel.add(customerIdLabel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(6, 5, 6, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        infoPanel.add(new JLabel("Name: "));
-        nameLabel.setText(customer.getName());
-        infoPanel.add(nameLabel);
+        int row = 0;
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Customer ID:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0; customerIdValueLabel.setText(String.valueOf(customer.getId()));
+        infoPanel.add(customerIdValueLabel, gbc);
+        row++;
 
-        infoPanel.add(new JLabel("Phone: "));
-        phoneLabel.setText(customer.getPhone());
-        infoPanel.add(phoneLabel);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Name:"), gbc);
+        gbc.gridx = 1; nameValueLabel.setText(customer.getName());
+        infoPanel.add(nameValueLabel, gbc);
+        row++;
 
-        infoPanel.add(new JLabel("Email: "));
-        emailLabel.setText(customer.getEmail());
-        infoPanel.add(emailLabel);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Phone:"), gbc);
+        gbc.gridx = 1; phoneValueLabel.setText(customer.getPhone());
+        infoPanel.add(phoneValueLabel, gbc);
+        row++;
 
-        infoPanel.add(new JLabel("Age: "));
-        ageLabel.setText(String.valueOf(customer.getAge()));
-        infoPanel.add(ageLabel);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Email:"), gbc);
+        gbc.gridx = 1; emailValueLabel.setText(customer.getEmail());
+        infoPanel.add(emailValueLabel, gbc);
+        row++;
 
-        infoPanel.add(new JLabel("Gender: "));
-        genderLabel.setText(customer.getGender());
-        infoPanel.add(genderLabel);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Age:"), gbc);
+        gbc.gridx = 1; ageValueLabel.setText(String.valueOf(customer.getAge()));
+        infoPanel.add(ageValueLabel, gbc);
+        row++;
 
-        infoPanel.add(new JLabel("Preferred Meal: "));
-        preferredMealLabel.setText(customer.getPreferredMealType().getDisplayName()); // Using getDisplayName()
-        infoPanel.add(preferredMealLabel);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Gender:"), gbc);
+        gbc.gridx = 1; genderValueLabel.setText(customer.getGender());
+        infoPanel.add(genderValueLabel, gbc);
+        row++;
+
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Preferred Meal:"), gbc);
+        gbc.gridx = 1; preferredMealValueLabel.setText(customer.getPreferredMealType().getDisplayName());
+        infoPanel.add(preferredMealValueLabel, gbc);
+        row++;
         
-        infoPanel.add(new JLabel("Status: ")); // Customer status
-        statusLabel.setText(customer.isDeleted() ? "Removed" : "Active");
-        statusLabel.setForeground(customer.isDeleted() ? Color.RED : Color.GREEN.darker());
-        statusLabel.setFont(statusLabel.getFont().deriveFont(Font.BOLD));
-        infoPanel.add(statusLabel);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Status:"), gbc);
+        gbc.gridx = 1; 
+        statusValueLabel.setText(customer.isDeleted() ? "Removed" : "Active");
+        statusValueLabel.setForeground(customer.isDeleted() ? new Color(200, 50, 50) : new Color(50, 150, 50));
+        statusValueLabel.setFont(statusValueLabel.getFont().deriveFont(Font.BOLD, 12f));
+        infoPanel.add(statusValueLabel, gbc);
 
         mainPanel.add(infoPanel, BorderLayout.NORTH);
 
-        // --- Bookings Panel ---
         JPanel bookingsPanel = new JPanel(new BorderLayout());
-        bookingsPanel.setBorder(BorderFactory.createTitledBorder("Customer Bookings"));
+        bookingsPanel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createEtchedBorder(), "Customer Bookings", TitledBorder.LEFT, TitledBorder.TOP,
+            new Font("SansSerif", Font.BOLD, 14), new Color(50, 50, 150)));
 
-        setupBookingsTable(); // Method to set up the bookings table
+        setupBookingsTable();
         JScrollPane scrollPane = new JScrollPane(bookingsTable);
         scrollPane.getViewport().setBackground(Color.WHITE);
         bookingsPanel.add(scrollPane, BorderLayout.CENTER);
 
         mainPanel.add(bookingsPanel, BorderLayout.CENTER);
 
-        // --- Bottom Panel with Close Button ---
-        JPanel bottomPanel = new JPanel();
+        // FIX: The constructor JPanel(FlowLayout) is undefined -> JPanel(new FlowLayout(...))
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10)); 
+        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        closeBtn.setBackground(new Color(100, 150, 200));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+        closeBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createRaisedBevelBorder(),
+            BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
         bottomPanel.add(closeBtn);
         closeBtn.addActionListener(this);
 
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         this.getContentPane().add(mainPanel);
-        setLocationRelativeTo(mw); // Center relative to MainWindow
+        setLocationRelativeTo(mw);
         setVisible(true);
     }
 
-    /**
-     * Sets up the JTable for displaying customer bookings.
-     */
     private void setupBookingsTable() {
         String[] columns = new String[]{
             "Booking Date", "Outbound Flight", "Return Flight", "Class", "Outbound Price (£)", "Return Price (£)", "Meal", "Cancellation Fee (£)"
@@ -131,7 +150,7 @@ public class CustomerDetailsWindow extends JFrame implements ActionListener {
         bookingsTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Make all cells non-editable
+                return false;
             }
         };
 
@@ -152,14 +171,14 @@ public class CustomerDetailsWindow extends JFrame implements ActionListener {
             
             String mealName = "None";
             if (booking.getMeal() != null) {
-                mealName = booking.getMeal().getName(); // Assuming Meal has getDisplayName()
+                mealName = booking.getMeal().getName();
             }
 
             bookingsTableModel.addRow(new Object[]{
                 booking.getBookingDate().format(dtf),
                 outboundFlightDetails,
                 returnFlightDetails,
-                booking.getBookedClass().getClassName(), // Using getClassName() for CommercialClassType
+                booking.getBookedClass().getClassName(),
                 booking.getBookedPriceOutbound().toPlainString(),
                 booking.getBookedPriceReturn().toPlainString(),
                 mealName,
@@ -169,28 +188,25 @@ public class CustomerDetailsWindow extends JFrame implements ActionListener {
 
         bookingsTable = new JTable(bookingsTableModel);
 
-        // Styling for the bookings table
         bookingsTable.setRowHeight(25);
         bookingsTable.setShowGrid(true);
         bookingsTable.setGridColor(new Color(220, 220, 220));
-        bookingsTable.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        bookingsTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
         
-        bookingsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
-        bookingsTable.getTableHeader().setBackground(new Color(245, 245, 250));
-        bookingsTable.getTableHeader().setForeground(new Color(60, 60, 60));
+        bookingsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
+        bookingsTable.getTableHeader().setBackground(new Color(230, 230, 240));
+        bookingsTable.getTableHeader().setForeground(new Color(40, 40, 40));
         bookingsTable.getTableHeader().setReorderingAllowed(false);
         
-        // Column widths for bookings table
-        bookingsTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Booking Date
-        bookingsTable.getColumnModel().getColumn(1).setPreferredWidth(150); // Outbound Flight
-        bookingsTable.getColumnModel().getColumn(2).setPreferredWidth(150); // Return Flight
-        bookingsTable.getColumnModel().getColumn(3).setPreferredWidth(80);  // Class
-        bookingsTable.getColumnModel().getColumn(4).setPreferredWidth(90);  // Outbound Price
-        bookingsTable.getColumnModel().getColumn(5).setPreferredWidth(90);  // Return Price
-        bookingsTable.getColumnModel().getColumn(6).setPreferredWidth(80);  // Meal
-        bookingsTable.getColumnModel().getColumn(7).setPreferredWidth(100); // Cancellation Fee
+        bookingsTable.getColumnModel().getColumn(0).setPreferredWidth(90);
+        bookingsTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        bookingsTable.getColumnModel().getColumn(2).setPreferredWidth(180);
+        bookingsTable.getColumnModel().getColumn(3).setPreferredWidth(70);
+        bookingsTable.getColumnModel().getColumn(4).setPreferredWidth(80);
+        bookingsTable.getColumnModel().getColumn(5).setPreferredWidth(80);
+        bookingsTable.getColumnModel().getColumn(6).setPreferredWidth(80);
+        bookingsTable.getColumnModel().getColumn(7).setPreferredWidth(90);
 
-        // Center align specific columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         bookingsTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
@@ -204,7 +220,7 @@ public class CustomerDetailsWindow extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() == closeBtn) {
-            this.dispose(); // Close the window
+            this.dispose();
         }
     }
 }

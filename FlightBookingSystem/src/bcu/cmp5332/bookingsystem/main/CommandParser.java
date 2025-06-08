@@ -262,9 +262,6 @@ public class CommandParser {
 
             case "listmeals":
                 return new ListMeals();
-
-            case "listallmeals":
-                return new ListAllMeals();
                 
             case "loadgui":
             	return new LoadGUI();

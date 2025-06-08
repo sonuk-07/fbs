@@ -25,6 +25,7 @@ public class MainWindow extends JFrame implements ActionListener {
     private JMenu flightsMenu;
     private JMenu bookingsMenu;
     private JMenu customersMenu;
+    private JMenu mealsMenu; 
 
     private JMenuItem adminExit;
 
@@ -40,12 +41,18 @@ public class MainWindow extends JFrame implements ActionListener {
     private JMenuItem custViewAll;
     private JMenuItem custAdd;
 
+    // Renamed and unified this menu item for meals
+    private JMenuItem mealsView; // Only one JMenuItem for viewing meals now
+    private JMenuItem mealsAdd;        
+
+
     private FlightBookingSystem fbs;
     private JPanel contentPanel;
     
     // View windows
     private ViewFlightWindow viewFlightWindow;
     private ViewCustomerWindow viewCustomerWindow;
+    private ViewMealWindow viewMealWindow; 
 
     public MainWindow(FlightBookingSystem fbs) {
         this.fbs = fbs;
@@ -62,6 +69,7 @@ public class MainWindow extends JFrame implements ActionListener {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
             // Handle look and feel exception
+            System.err.println("Failed to set LookAndFeel: " + ex.getMessage());
         }
 
         setTitle("Flight Booking Management System");
@@ -132,6 +140,21 @@ public class MainWindow extends JFrame implements ActionListener {
         custViewActive.addActionListener(this);
         custViewAll.addActionListener(this);
         custAdd.addActionListener(this);
+
+        // Meals Menu (UPDATED SECTION)
+        mealsMenu = new JMenu("Meals");
+        menuBar.add(mealsMenu);
+        
+        // Only one menu item for viewing all meals (active and removed)
+        mealsView = new JMenuItem("View All Meals"); 
+        mealsAdd = new JMenuItem("Add Meal");
+        
+        mealsMenu.add(mealsView); // Add the unified view item
+        mealsMenu.addSeparator();
+        mealsMenu.add(mealsAdd);
+        
+        mealsView.addActionListener(this); // Add listener to the unified view item
+        mealsAdd.addActionListener(this);
     }
 
     private void setupContentPanel() {
@@ -161,23 +184,31 @@ public class MainWindow extends JFrame implements ActionListener {
         } else if (ae.getSource() == custAdd) {
             new AddCustomerWindow(this);
         }
+        // Meal Menu Actions (UPDATED SECTION)
+        else if (ae.getSource() == mealsView) { // Now directly linked to the unified menu item
+            showMealView(); // CALL WITHOUT ANY ARGUMENTS
+        } else if (ae.getSource() == mealsAdd) {
+            new AddMealWindow(this);
+        }
         // Booking Menu Actions
         else if (ae.getSource() == bookingsIssue) {
-            // TODO: Implement booking issue functionality
             JOptionPane.showMessageDialog(this, "Booking functionality not yet implemented.", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
         } else if (ae.getSource() == bookingsUpdate) {
-            // TODO: Implement booking update functionality
             JOptionPane.showMessageDialog(this, "Booking functionality not yet implemented.", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
         } else if (ae.getSource() == bookingsCancel) {
-            // TODO: Implement booking cancellation functionality
             JOptionPane.showMessageDialog(this, "Booking functionality not yet implemented.", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void showFlightView(boolean showAll) {
+        // Clean up other views if they are active
         if (viewCustomerWindow != null) {
             viewCustomerWindow.cleanup();
             viewCustomerWindow = null;
+        }
+        if (viewMealWindow != null) { 
+            viewMealWindow.cleanup();
+            viewMealWindow = null;
         }
         
         if (viewFlightWindow == null) {
@@ -192,9 +223,14 @@ public class MainWindow extends JFrame implements ActionListener {
     }
 
     private void showCustomerView(boolean showAll) {
+        // Clean up other views if they are active
         if (viewFlightWindow != null) {
             viewFlightWindow.cleanup();
             viewFlightWindow = null;
+        }
+        if (viewMealWindow != null) { 
+            viewMealWindow.cleanup();
+            viewMealWindow = null;
         }
         
         if (viewCustomerWindow == null) {
@@ -208,6 +244,30 @@ public class MainWindow extends JFrame implements ActionListener {
         contentPanel.repaint();
     }
 
+    // Updated method to show the Meal View (no boolean parameter)
+    private void showMealView() { // <--- Signature changed
+        // Clean up other views if they are active
+        if (viewFlightWindow != null) {
+            viewFlightWindow.cleanup();
+            viewFlightWindow = null;
+        }
+        if (viewCustomerWindow != null) {
+            viewCustomerWindow.cleanup();
+            viewCustomerWindow = null;
+        }
+        
+        if (viewMealWindow == null) {
+            viewMealWindow = new ViewMealWindow(this, fbs);
+        }
+        
+        contentPanel.removeAll();
+        contentPanel.add(viewMealWindow.getPanel(), BorderLayout.CENTER);
+        viewMealWindow.displayMeals(); // <--- Call without parameters
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+
     private void exitApplication() {
         try {
             FlightBookingSystemData.store(fbs);
@@ -219,36 +279,41 @@ public class MainWindow extends JFrame implements ActionListener {
     }
 
     public void refreshCurrentView() {
-        if (viewFlightWindow != null && viewFlightWindow.isVisible()) {
+        if (viewFlightWindow != null && contentPanel.isAncestorOf(viewFlightWindow.getPanel())) {
             viewFlightWindow.refreshView();
-        }
-        if (viewCustomerWindow != null && viewCustomerWindow.isVisible()) {
+        } else if (viewCustomerWindow != null && contentPanel.isAncestorOf(viewCustomerWindow.getPanel())) {
             viewCustomerWindow.refreshView();
+        } else if (viewMealWindow != null && contentPanel.isAncestorOf(viewMealWindow.getPanel())) {
+            viewMealWindow.refreshView(); // Calls refreshView without parameters
         }
     }
 
- // In MainWindow.java
-
     public void displayFlights() {
-        // Check if the flight view is currently displayed and refresh it
         if (viewFlightWindow != null && contentPanel.isAncestorOf(viewFlightWindow.getPanel())) {
-            viewFlightWindow.displayFlights(false); // Assuming you want to display active flights after adding
-            // If you want to retain the current 'view all' or 'view active' state,
-            // you would need to store that state in MainWindow or viewFlightWindow
+            viewFlightWindow.displayFlights(false); 
         } else {
-            // If the flight view is not currently visible, make it visible and display active flights
             showFlightView(false);
         }
     }
 
     public void displayCustomers() {
-        // Check if the customer view is currently displayed and refresh it
         if (viewCustomerWindow != null && contentPanel.isAncestorOf(viewCustomerWindow.getPanel())) {
-            viewCustomerWindow.displayCustomers(false); // Assuming you want to display active customers after adding
-            // Similar to flights, if you want to retain the current 'view all' or 'view active' state
+            viewCustomerWindow.displayCustomers(false); 
         } else {
-            // If the customer view is not currently visible, make it visible and display active customers
             showCustomerView(false);
+        }
+    }
+
+    /**
+     * Refreshes the display of meals in the main window.
+     * If the meal view is currently active, it refreshes the table.
+     * Otherwise, it switches to the meal view.
+     */
+    public void displayMeals() { // This method in MainWindow now calls without arguments
+        if (viewMealWindow != null && contentPanel.isAncestorOf(viewMealWindow.getPanel())) {
+            viewMealWindow.displayMeals(); // <--- Call without parameters
+        } else {
+            showMealView(); // <--- Call without parameters
         }
     }
 }

@@ -11,16 +11,20 @@ public class ListMeals implements Command {
 
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
-        List<Meal> meals = flightBookingSystem.getMeals(); // Gets active meals
-        if (meals.isEmpty()) {
-            System.out.println("No available meals in the system.");
+        // Use getAllMeals() to retrieve all meals, including deleted ones
+        List<Meal> allMeals = flightBookingSystem.getAllMeals(); 
+
+        if (allMeals.isEmpty()) {
+            System.out.println("No meals in the system.");
             return;
         }
 
-        System.out.println("--- Available Meals ---");
-        for (Meal meal : meals) {
-            System.out.println(meal.getDetailsShort());
+        System.out.println("--- All Meals (Active and Unavailable) ---");
+        for (Meal meal : allMeals) {
+            // Determine the status string based on the meal's deleted status
+            String status = meal.isDeleted() ? " (Unavailable)" : " (Active)"; 
+            System.out.println(meal.getDetailsShort() + status);
         }
-        System.out.println(meals.size() + " available meal(s)");
+        System.out.println(allMeals.size() + " meal(s) listed.");
     }
 }

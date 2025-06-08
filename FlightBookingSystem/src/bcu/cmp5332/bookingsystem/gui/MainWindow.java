@@ -1,36 +1,36 @@
 package bcu.cmp5332.bookingsystem.gui;
 
 import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData;
+import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.Flight;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 import bcu.cmp5332.bookingsystem.model.FlightType;
-import bcu.cmp5332.bookingsystem.model.CommercialClassType;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.time.LocalDate; // Import LocalDate for date comparison
+import java.time.format.DateTimeFormatter; // Import DateTimeFormatter for formatting
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JPanel;
-import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 
 public class MainWindow extends JFrame implements ActionListener {
 
@@ -42,10 +42,10 @@ public class MainWindow extends JFrame implements ActionListener {
 
     private JMenuItem adminExit;
 
-    private JMenuItem flightsView;
+    private JMenuItem flightsViewActive;
+    private JMenuItem flightsViewAll;
     private JMenuItem flightsAdd;
-    private JMenuItem flightsDel;
-    
+
     private JMenuItem bookingsIssue;
     private JMenuItem bookingsUpdate;
     private JMenuItem bookingsCancel;
@@ -56,31 +56,33 @@ public class MainWindow extends JFrame implements ActionListener {
 
     private FlightBookingSystem fbs;
     
-    // Toggle for seat display mode
-    private JToggleButton seatDisplayToggle;
-    private boolean showAvailable = true; // true = show available, false = show occupied
+    private JTable flightsTable; 
+    private DefaultTableModel flightsTableModel;
+    private JLabel titleLabel; 
     
-    // Current flights table for refreshing
-    private JTable currentFlightsTable;
+    private JPopupMenu flightPopupMenu;
+    private JMenuItem viewDetailsMenuItem;
+    private JMenuItem removeFlightMenuItem;
+
+    private boolean showAllFlights = false; 
+    
+    private JPanel contentPanel; 
 
     public MainWindow(FlightBookingSystem fbs) {
         initialize();
         this.fbs = fbs;
+        displayFlights(); 
     }
     
     public FlightBookingSystem getFlightBookingSystem() {
         return fbs;
     }
 
-    /**
-     * Initialize the contents of the frame.
-     */
     private void initialize() {
-
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-
+            // Handle look and feel exception
         }
 
         setTitle("Flight Booking Management System");
@@ -88,7 +90,6 @@ public class MainWindow extends JFrame implements ActionListener {
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
 
-        //adding adminMenu menu and menu items
         adminMenu = new JMenu("Admin");
         menuBar.add(adminMenu);
 
@@ -96,67 +97,59 @@ public class MainWindow extends JFrame implements ActionListener {
         adminMenu.add(adminExit);
         adminExit.addActionListener(this);
 
-        // adding Flights menu and menu items
         flightsMenu = new JMenu("Flights");
         menuBar.add(flightsMenu);
 
-        flightsView = new JMenuItem("View");
-        flightsAdd = new JMenuItem("Add");
-        flightsDel = new JMenuItem("Delete");
-        flightsMenu.add(flightsView);
-        flightsMenu.add(flightsAdd);
-        flightsMenu.add(flightsDel);
-        // adding action listener for Flights menu items
-        for (int i = 0; i < flightsMenu.getItemCount(); i++) {
-            flightsMenu.getItem(i).addActionListener(this);
-        }
+        flightsViewActive = new JMenuItem("View Active Flights Only");
+        flightsViewAll = new JMenuItem("View All Flights (Including Removed)");
+        flightsAdd = new JMenuItem("Add Flight");
         
-        // adding Bookings menu and menu items
+        flightsMenu.add(flightsViewActive);
+        flightsMenu.add(flightsViewAll);
+        flightsMenu.addSeparator();
+        flightsMenu.add(flightsAdd);
+        
+        flightsViewActive.addActionListener(this);
+        flightsViewAll.addActionListener(this);
+        flightsAdd.addActionListener(this);
+        
         bookingsMenu = new JMenu("Bookings");
         menuBar.add(bookingsMenu);
         
-        bookingsIssue = new JMenuItem("Issue");
-        bookingsUpdate = new JMenuItem("Update");
-        bookingsCancel = new JMenuItem("Cancel");
+        bookingsIssue = new JMenuItem("Issue Booking");
+        bookingsUpdate = new JMenuItem("Update Booking");
+        bookingsCancel = new JMenuItem("Cancel Booking");
         bookingsMenu.add(bookingsIssue);
         bookingsMenu.add(bookingsUpdate);
         bookingsMenu.add(bookingsCancel);
-        // adding action listener for Bookings menu items
         for (int i = 0; i < bookingsMenu.getItemCount(); i++) {
             bookingsMenu.getItem(i).addActionListener(this);
         }
 
-        // adding Customers menu and menu items
         customersMenu = new JMenu("Customers");
         menuBar.add(customersMenu);
 
-        custView = new JMenuItem("View");
-        custAdd = new JMenuItem("Add");
-        custDel = new JMenuItem("Delete");
+        custView = new JMenuItem("View Customers");
+        custAdd = new JMenuItem("Add Customer");
+        custDel = new JMenuItem("Delete Customer");
 
         customersMenu.add(custView);
         customersMenu.add(custAdd);
         customersMenu.add(custDel);
-        // adding action listener for Customers menu items
         custView.addActionListener(this);
         custAdd.addActionListener(this);
         custDel.addActionListener(this);
 
-        setSize(1200, 600); // Increased window size for better display
+        setSize(1200, 600); 
 
+        contentPanel = new JPanel(new BorderLayout());
+        this.getContentPane().add(contentPanel); 
+        
         setVisible(true);
         setAutoRequestFocus(true);
         toFront();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        /* Uncomment the following line to not terminate the console app when the window is closed */
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);        
     }	
-
-    /* Uncomment the following code to run the GUI version directly from the IDE */
-    //    public static void main(String[] args) throws IOException, FlightBookingSystemException {
-    //        FlightBookingSystem fbs = FlightBookingSystemData.load();
-    //        new MainWindow(fbs);			
-    //    }
 
     @Override
     public void actionPerformed(ActionEvent ae) {
@@ -168,281 +161,248 @@ public class MainWindow extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, ex, "Error", JOptionPane.ERROR_MESSAGE);
             }
             System.exit(0);
-        } else if (ae.getSource() == flightsView) {
+        } else if (ae.getSource() == flightsViewActive) {
+            showAllFlights = false;
             displayFlights();
-            
+        } else if (ae.getSource() == flightsViewAll) {
+            showAllFlights = true;
+            displayFlights();
         } else if (ae.getSource() == flightsAdd) {
             new AddFlightWindow(this);
-            
-        } else if (ae.getSource() == flightsDel) {
-            // TODO: Implement flight deletion functionality
-            
-        } else if (ae.getSource() == bookingsIssue) {
+        } else if (ae.getSource() == viewDetailsMenuItem) {
+            viewSelectedFlightDetails();
+        } else if (ae.getSource() == removeFlightMenuItem) {
+            removeSelectedFlight();
+        } 
+        else if (ae.getSource() == bookingsIssue) {
             // TODO: Implement booking issue functionality
-            
         } else if (ae.getSource() == bookingsUpdate) {
             // TODO: Implement booking update functionality
-            
         } else if (ae.getSource() == bookingsCancel) {
             // TODO: Implement booking cancellation functionality
-            
         } else if (ae.getSource() == custView) {
             // TODO: Implement customer view functionality
-            
         } else if (ae.getSource() == custAdd) {
             // TODO: Implement customer add functionality
-            
         } else if (ae.getSource() == custDel) {
             // TODO: Implement customer delete functionality
-            
-        } else if (ae.getSource() == seatDisplayToggle) {
-            // Toggle between showing available and occupied seats
-            showAvailable = !showAvailable;
-            updateSeatDisplayToggle();
-            refreshFlightsDisplay();
-        }
-    }
-
-    private void updateSeatDisplayToggle() {
-        if (showAvailable) {
-            seatDisplayToggle.setText("Showing: Available Seats");
-            seatDisplayToggle.setBackground(new Color(200, 255, 200));
-            seatDisplayToggle.setToolTipText("Click to show occupied seats instead");
-        } else {
-            seatDisplayToggle.setText("Showing: Occupied Seats");
-            seatDisplayToggle.setBackground(new Color(255, 220, 200));
-            seatDisplayToggle.setToolTipText("Click to show available seats instead");
-        }
-    }
-
-    private void refreshFlightsDisplay() {
-        if (currentFlightsTable != null) {
-            displayFlights();
         }
     }
 
     public void displayFlights() {
-        List<Flight> flightsList = fbs.getFlights();
+        List<Flight> flightsList;
+        String tableTitle;
+
+        if (showAllFlights) {
+            flightsList = fbs.getAllFlights();
+            tableTitle = "All Flights (Including Removed)";
+        } else {
+            // For active flights, filter out departed ones unless explicitly viewing all
+            flightsList = fbs.getFlights(); // This should get future active flights
+            tableTitle = "Active Future Flights";
+        }
         
-        // Dynamic headers based on display mode
-        String seatDisplayText = showAvailable ? "Available" : "Occupied";
         String[] columns = new String[]{
-            "Flight No", "Origin", "Destination", "Date", "Type", "Total Seats", 
-            "Economy (" + seatDisplayText + ")", "Premium Eco (" + seatDisplayText + ")", 
-            "Business (" + seatDisplayText + ")", "First (" + seatDisplayText + ")"
+            "ID", "Flight No", "Origin", "Destination", "Date", "Type", "Economy Price (£)", "Total Capacity", "Status"
         };
 
-        Object[][] data = new Object[flightsList.size()][10];
-        for (int i = 0; i < flightsList.size(); i++) {
-            Flight flight = flightsList.get(i);
+        if (flightsTableModel == null) {
+            flightsTableModel = new DefaultTableModel(columns, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            flightsTable = new JTable(flightsTableModel);
+
+            flightPopupMenu = new JPopupMenu();
+            viewDetailsMenuItem = new JMenuItem("View Details");
+            removeFlightMenuItem = new JMenuItem("Remove Flight");
             
-            data[i][0] = flight.getFlightNumber();
-            data[i][1] = flight.getOrigin();
-            data[i][2] = flight.getDestination();
-            data[i][3] = flight.getDepartureDate() != null ? 
-                        flight.getDepartureDate().toString() : "TBD";
-            data[i][4] = flight.getFlightType() == FlightType.COMMERCIAL ? "Commercial" : "Budget";
-            data[i][5] = flight.getCapacity();
+            viewDetailsMenuItem.addActionListener(this);
+            removeFlightMenuItem.addActionListener(this);
             
-            // Initialize all class columns
-            data[i][6] = "-"; // Economy
-            data[i][7] = "-"; // Premium Economy
-            data[i][8] = "-"; // Business
-            data[i][9] = "-"; // First
-            
-            if (flight.getFlightType() == FlightType.COMMERCIAL && flight.getClassCapacities() != null) {
-                Map<CommercialClassType, Integer> classCapacities = flight.getClassCapacities();
-                Map<CommercialClassType, Integer> occupiedSeats = flight.getOccupiedSeatsMap();
-                
-                for (Map.Entry<CommercialClassType, Integer> entry : classCapacities.entrySet()) {
-                    CommercialClassType classType = entry.getKey();
-                    int capacity = entry.getValue();
-                    int occupied = occupiedSeats.getOrDefault(classType, 0);
-                    int available = capacity - occupied;
-                    
-                    // Choose display format based on toggle
-                    String displayText;
-                    if (showAvailable) {
-                        displayText = available + "/" + capacity;
-                    } else {
-                        displayText = occupied + "/" + capacity;
+            flightPopupMenu.add(viewDetailsMenuItem);
+            flightPopupMenu.add(removeFlightMenuItem);
+
+            flightsTable.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    int row = flightsTable.rowAtPoint(e.getPoint());
+                    if (row != -1) {
+                        flightsTable.setRowSelectionInterval(row, row);
                     }
-                    
-                    switch (classType) {
-                        case ECONOMY:
-                            data[i][6] = displayText;
-                            break;
-                        case PREMIUM_ECONOMY:
-                            data[i][7] = displayText;
-                            break;
-                        case BUSINESS:
-                            data[i][8] = displayText;
-                            break;
-                        case FIRST:
-                            data[i][9] = displayText;
-                            break;
+                    showPopup(e);
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    showPopup(e);
+                }
+                
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2 && flightsTable.getSelectedRow() != -1) {
+                        viewSelectedFlightDetails();
                     }
                 }
-            } else if (flight.getFlightType() == FlightType.BUDGET) {
-                // Budget flight - only economy
-                int occupied = 0;
-                if (flight.getOccupiedSeatsMap() != null) {
-                    occupied = flight.getOccupiedSeatsMap().getOrDefault(CommercialClassType.ECONOMY, 0);
+
+                private void showPopup(MouseEvent e) {
+                    if (e.isPopupTrigger() && flightsTable.getSelectedRow() != -1) {
+                        // Get the status from the table, not just checking isDeleted()
+                        String currentStatus = (String) flightsTableModel.getValueAt(flightsTable.getSelectedRow(), 8);
+                        // Only enable remove if the flight is 'Active' (not 'Removed' or 'Departed')
+                        removeFlightMenuItem.setEnabled("Active".equals(currentStatus));
+                        flightPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    }
                 }
-                int available = flight.getCapacity() - occupied;
-                
-                if (showAvailable) {
-                    data[i][6] = available + "/" + flight.getCapacity();
-                } else {
-                    data[i][6] = occupied + "/" + flight.getCapacity();
-                }
-            }
+            });
+            
+            flightsTable.setRowHeight(30);
+            flightsTable.setShowGrid(true);
+            flightsTable.setGridColor(new Color(220, 220, 220));
+            flightsTable.setSelectionBackground(new Color(230, 240, 255));
+            flightsTable.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            
+            flightsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
+            flightsTable.getTableHeader().setBackground(new Color(245, 245, 250));
+            flightsTable.getTableHeader().setForeground(new Color(60, 60, 60));
+            flightsTable.getTableHeader().setReorderingAllowed(false);
+            
+            flightsTable.getColumnModel().getColumn(0).setPreferredWidth(40);
+            flightsTable.getColumnModel().getColumn(1).setPreferredWidth(70);
+            flightsTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+            flightsTable.getColumnModel().getColumn(3).setPreferredWidth(100);
+            flightsTable.getColumnModel().getColumn(4).setPreferredWidth(90);
+            flightsTable.getColumnModel().getColumn(5).setPreferredWidth(80);
+            flightsTable.getColumnModel().getColumn(6).setPreferredWidth(100);
+            flightsTable.getColumnModel().getColumn(7).setPreferredWidth(80);
+            flightsTable.getColumnModel().getColumn(8).setPreferredWidth(70);
+            
+            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+            centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+            flightsTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+            flightsTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
+            flightsTable.getColumnModel().getColumn(5).setCellRenderer(centerRenderer);
+            flightsTable.getColumnModel().getColumn(7).setCellRenderer(centerRenderer);
+            flightsTable.getColumnModel().getColumn(8).setCellRenderer(centerRenderer);
+
+            titleLabel = new JLabel(); 
+
+            contentPanel.removeAll(); 
+            
+            contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+            contentPanel.add(titleLabel, BorderLayout.NORTH); 
+            contentPanel.add(new JScrollPane(flightsTable), BorderLayout.CENTER); 
+            contentPanel.revalidate();
+            contentPanel.repaint();
+
         }
 
-        JTable table = new JTable(data, columns);
-        currentFlightsTable = table;
+        flightsTableModel.setRowCount(0); 
+        LocalDate today = LocalDate.now(); // Get current date
+
+        for (Flight flight : flightsList) {
+            String status;
+            if (flight.isDeleted()) {
+                status = "Removed";
+            } else if (flight.getDepartureDate() != null && flight.getDepartureDate().isBefore(today)) {
+                status = "Departed"; // Flight has departed
+            } else {
+                status = "Active"; // Flight is active and in the future
+            }
+
+            flightsTableModel.addRow(new Object[]{
+                flight.getId(),
+                flight.getFlightNumber(),
+                flight.getOrigin(),
+                flight.getDestination(),
+                // Use DateTimeFormatter for consistency if needed, though direct access is fine
+                flight.getDepartureDate() != null ? 
+                    flight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "TBD",
+                flight.getFlightType() == FlightType.COMMERCIAL ? "Commercial" : "Budget",
+                flight.getEconomyPrice().toPlainString(),
+                flight.getCapacity(),
+                status
+            });
+        }
         
-        // Enhanced table styling
-        table.setRowHeight(35);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(220, 220, 220));
-        table.setSelectionBackground(new Color(230, 240, 255));
-        table.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        titleLabel.setText(tableTitle); 
         
-        // Header styling
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
-        table.getTableHeader().setBackground(new Color(245, 245, 250));
-        table.getTableHeader().setForeground(new Color(60, 60, 60));
-        table.getTableHeader().setReorderingAllowed(false);
-        
-        // Column widths
-        table.getColumnModel().getColumn(0).setPreferredWidth(70);  // Flight No
-        table.getColumnModel().getColumn(1).setPreferredWidth(100); // Origin
-        table.getColumnModel().getColumn(2).setPreferredWidth(100); // Destination
-        table.getColumnModel().getColumn(3).setPreferredWidth(90);  // Date
-        table.getColumnModel().getColumn(4).setPreferredWidth(80);  // Type
-        table.getColumnModel().getColumn(5).setPreferredWidth(70);  // Total Seats
-        table.getColumnModel().getColumn(6).setPreferredWidth(100); // Economy
-        table.getColumnModel().getColumn(7).setPreferredWidth(120); // Premium Eco
-        table.getColumnModel().getColumn(8).setPreferredWidth(100); // Business
-        table.getColumnModel().getColumn(9).setPreferredWidth(80);  // First
-        
-        // Custom cell renderer for seat availability/occupancy with color coding
-        SeatDisplayRenderer seatRenderer = new SeatDisplayRenderer();
-        table.getColumnModel().getColumn(6).setCellRenderer(seatRenderer); // Economy
-        table.getColumnModel().getColumn(7).setCellRenderer(seatRenderer); // Premium Eco
-        table.getColumnModel().getColumn(8).setCellRenderer(seatRenderer); // Business
-        table.getColumnModel().getColumn(9).setCellRenderer(seatRenderer); // First
-        
-        // Center align specific columns
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // Flight No
-        table.getColumnModel().getColumn(4).setCellRenderer(centerRenderer); // Type
-        table.getColumnModel().getColumn(5).setCellRenderer(centerRenderer); // Total Seats
-        
-        // Create control panel
-        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        controlPanel.setBackground(new Color(245, 245, 250));
-        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        
-        // Initialize toggle button
-        seatDisplayToggle = new JToggleButton();
-        seatDisplayToggle.setFont(new Font("SansSerif", Font.BOLD, 12));
-        seatDisplayToggle.setFocusPainted(false);
-        seatDisplayToggle.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createRaisedBevelBorder(),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
-        seatDisplayToggle.addActionListener(this);
-        updateSeatDisplayToggle();
-        
-        // Add info label
-        JLabel infoLabel = new JLabel("Seat Information Format: " + 
-            (showAvailable ? "Available" : "Occupied") + "/Total");
-        infoLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        infoLabel.setForeground(new Color(100, 100, 100));
-        
-        controlPanel.add(seatDisplayToggle);
-        controlPanel.add(new JLabel("     ")); // Spacer
-        controlPanel.add(infoLabel);
-        
-        // Create scroll pane
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
-        scrollPane.getViewport().setBackground(Color.WHITE);
-        
-        // Create main panel
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(controlPanel, BorderLayout.NORTH);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-        
-        this.getContentPane().removeAll();
-        this.getContentPane().add(mainPanel);
-        this.revalidate();
-        this.repaint();
+        contentPanel.revalidate();
+        contentPanel.repaint();
     }
     
-    /**
-     * Custom cell renderer for seat display with color coding
-     */
-    private class SeatDisplayRenderer extends DefaultTableCellRenderer {
-        @Override
-        public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            
-            setHorizontalAlignment(JLabel.CENTER);
-            
-            if (value != null && !value.equals("-")) {
-                String text = value.toString();
-                if (text.contains("/")) {
-                    String[] parts = text.split("/");
-                    if (parts.length == 2) {
-                        try {
-                            int displayValue = Integer.parseInt(parts[0]);
-                            int total = Integer.parseInt(parts[1]);
-                            
-                            // Color coding based on display mode
-                            if (showAvailable) {
-                                // Available seats coloring
-                                if (displayValue == 0) {
-                                    setBackground(isSelected ? new Color(255, 200, 200) : new Color(255, 230, 230));
-                                    setForeground(new Color(150, 0, 0));
-                                } else if (displayValue < total * 0.3) {
-                                    setBackground(isSelected ? new Color(255, 220, 200) : new Color(255, 245, 230));
-                                    setForeground(new Color(200, 100, 0));
-                                } else {
-                                    setBackground(isSelected ? new Color(200, 255, 200) : new Color(240, 255, 240));
-                                    setForeground(new Color(0, 120, 0));
-                                }
-                            } else {
-                                // Occupied seats coloring (reverse logic)
-                                if (displayValue == total) {
-                                    setBackground(isSelected ? new Color(255, 200, 200) : new Color(255, 230, 230));
-                                    setForeground(new Color(150, 0, 0));
-                                } else if (displayValue > total * 0.7) {
-                                    setBackground(isSelected ? new Color(255, 220, 200) : new Color(255, 245, 230));
-                                    setForeground(new Color(200, 100, 0));
-                                } else {
-                                    setBackground(isSelected ? new Color(200, 255, 200) : new Color(240, 255, 240));
-                                    setForeground(new Color(0, 120, 0));
-                                }
-                            }
-                        } catch (NumberFormatException e) {
-                            setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
-                            setForeground(table.getForeground());
-                        }
-                    }
-                }
-            } else {
-                setBackground(isSelected ? table.getSelectionBackground() : new Color(250, 250, 250));
-                setForeground(new Color(150, 150, 150));
+    private void viewSelectedFlightDetails() {
+        int selectedRow = flightsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a flight to view details.", "No Flight Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int flightId = (int) flightsTableModel.getValueAt(selectedRow, 0); 
+        try {
+            // Ensure you get the flight by ID from the FBS, which contains all flights
+            Flight selectedFlight = fbs.getFlightByIDIncludingDeleted(flightId); 
+            if (selectedFlight == null) {
+                 JOptionPane.showMessageDialog(MainWindow.this, "Flight details could not be retrieved. It might have been permanently removed.", "Error", JOptionPane.ERROR_MESSAGE);
+                 return;
             }
-            
-            return this;
+            new FlightDetailsWindow(MainWindow.this, selectedFlight);
+        } catch (Exception ex) { 
+            JOptionPane.showMessageDialog(MainWindow.this, "Error viewing flight details: " + ex.getMessage(), "Flight Details Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-	
+
+    private void removeSelectedFlight() {
+        int selectedRow = flightsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "No flight selected for removal.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Get the current status from the table row
+        String status = (String) flightsTableModel.getValueAt(selectedRow, 8);
+        if (status.equals("Removed")) {
+            JOptionPane.showMessageDialog(this, "This flight has already been removed.", "Already Removed", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (status.equals("Departed")) {
+            JOptionPane.showMessageDialog(this, "Departed flights cannot be removed.", "Cannot Remove", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int flightIdToDelete = (int) flightsTableModel.getValueAt(selectedRow, 0); 
+        String flightNumber = (String) flightsTableModel.getValueAt(selectedRow, 1); 
+
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Are you sure you want to remove flight " + flightNumber + " (ID: " + flightIdToDelete + ")?\n" +
+            "This will mark the flight as removed and it will no longer appear in active lists.", 
+            "Confirm Removal", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean removed = fbs.removeFlightById(flightIdToDelete); 
+
+                if (removed) {
+                    FlightBookingSystemData.store(fbs);
+                    
+                    JOptionPane.showMessageDialog(this, 
+                        "Flight " + flightNumber + " (ID: " + flightIdToDelete + ") has been successfully marked as removed.", 
+                        "Removal Successful", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    displayFlights(); 
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                        "Flight with ID " + flightIdToDelete + " was not found or could not be removed.", 
+                        "Removal Failed", JOptionPane.WARNING_MESSAGE);
+                }
+
+            } catch (FlightBookingSystemException | IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error removing flight: " + ex.getMessage(), "Removal Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "An unexpected error occurred during removal: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 }

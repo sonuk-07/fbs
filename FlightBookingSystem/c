@@ -1,0 +1,25 @@
+
+package bcu.cmp5332.bookingsystem.gui;
+
+import bcu.cmp5332.bookingsystem.commands.CancelBooking;
+import bcu.cmp5332.bookingsystem.commands.Command;
+import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class CancelBookingWindow extends JFrame implements ActionListener {
+    private MainWindow mw;
+    private JTextField customerIdText = new JTextField();
+    private JTextField flightIdText = new JTextField();
+    private JButton cancelBookingBtn = new JButton("Cancel Booking");
+    private JButton closeBtn = new JButton("Close");
+
+    public CancelBookingWindow(MainWindow mw) {
+        this.mw = mw;
+        initialize();
+    }
+
+    private void initialize() {
+        setTitle(

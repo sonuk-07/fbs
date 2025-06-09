@@ -10,12 +10,12 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Comparator; 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.ArrayList; 
-import java.util.List; 
+import java.util.ArrayList;
+import java.util.List;
 
 public class FlightDataManager implements DataManager {
 
@@ -30,7 +30,6 @@ public class FlightDataManager implements DataManager {
             int line_idx = 1;
             while (sc.hasNextLine()) {
                 String line = sc.nextLine();
-                // Skip empty lines in the data file
                 if (line.trim().isEmpty()) {
                     line_idx++;
                     continue;
@@ -38,28 +37,25 @@ public class FlightDataManager implements DataManager {
 
                 String[] properties = line.split(SEPARATOR, -1);
                 
-                // Declare variables outside the inner try-catch, initializing to a safe default where needed
                 int id;
                 String flightNumber;
                 String origin;
                 String destination;
-                LocalDate departureDate; 
+                LocalDate departureDate;
                 BigDecimal economyPrice;
                 int totalCapacity;
                 FlightType flightType;
-                Map<CommercialClassType, Integer> classCapacities = null; 
+                Map<CommercialClassType, Integer> classCapacities = null;
                 boolean deleted = false;
-                Map<CommercialClassType, Integer> occupiedSeatsByClass = new HashMap<>(); 
+                Map<CommercialClassType, Integer> occupiedSeatsByClass = new HashMap<>();
 
                 try {
-                    // All parsing logic for a single line
                     id = Integer.parseInt(properties[0].trim());
                     flightNumber = properties[1].trim();
                     origin = properties[2].trim();
                     destination = properties[3].trim();
                     
                     try {
-                        // This handles the 'null' literal gracefully now that Flight constructor is fixed
                         departureDate = LocalDate.parse(properties[4].trim());
                     } catch (DateTimeParseException e) {
                         throw new FlightBookingSystemException("Invalid departure date format for flight ID " + id + " on line " + line_idx + ": '" + properties[4].trim() + "' - " + e.getMessage(), e);
@@ -70,9 +66,8 @@ public class FlightDataManager implements DataManager {
                     flightType = FlightType.valueOf(properties[7].trim());
 
                     if (flightType == FlightType.COMMERCIAL) {
-                        // Ensure properties[8] exists and is not empty before parsing classCapacities
                         if (properties.length > 8 && !properties[8].trim().isEmpty()) {
-                            classCapacities = new HashMap<>(); 
+                            classCapacities = new HashMap<>();
                             String capacitiesString = properties[8].trim();
                             String[] entries = capacitiesString.split(MAP_ENTRY_SEPARATOR);
                             for (String entry : entries) {
@@ -84,7 +79,7 @@ public class FlightDataManager implements DataManager {
                                 }
                             }
                         } else {
-                            classCapacities = null; 
+                            classCapacities = null;
                         }
                     }
 
@@ -93,7 +88,7 @@ public class FlightDataManager implements DataManager {
                     }
 
                     if (properties.length > 10 && !properties[10].trim().isEmpty()) {
-                        occupiedSeatsByClass = new HashMap<>(); 
+                        occupiedSeatsByClass = new HashMap<>();
                         String occupiedSeatsString = properties[10].trim();
                         String[] entries = occupiedSeatsString.split(MAP_ENTRY_SEPARATOR);
                         for (String entry : entries) {
@@ -110,10 +105,10 @@ public class FlightDataManager implements DataManager {
                     if (flightType == FlightType.BUDGET) {
                         flight = new Flight(id, flightNumber, origin, destination,
                                             departureDate, economyPrice, totalCapacity);
-                    } else { // Commercial
+                    } else {
                         flight = new Flight(id, flightNumber, origin, destination,
                                             departureDate, economyPrice, totalCapacity,
-                                            flightType, classCapacities); 
+                                            flightType, classCapacities);
                     }
 
                     flight.setDeleted(deleted);
@@ -127,7 +122,7 @@ public class FlightDataManager implements DataManager {
                     throw new FlightBookingSystemException("Error parsing numeric value for flight on line " + line_idx + ": " + e.getMessage(), e);
                 } catch (IllegalArgumentException e) {
                     throw new FlightBookingSystemException("Error parsing enum value for flight on line " + line_idx + ": " + e.getMessage(), e);
-                } catch (Exception ex) { 
+                } catch (Exception ex) {
                     throw new FlightBookingSystemException("Unknown error parsing flight on line " + line_idx + ": " + ex.getMessage(), ex);
                 }
                 line_idx++;
@@ -147,19 +142,18 @@ public class FlightDataManager implements DataManager {
                 if (flight.getDepartureDate() != null) {
                     out.print(SEPARATOR + flight.getDepartureDate());
                 } else {
-                    out.print(SEPARATOR + "null"); 
+                    out.print(SEPARATOR + "null");
                 }
                 
                 out.print(SEPARATOR + flight.getEconomyPrice());
                 out.print(SEPARATOR + flight.getCapacity());
                 out.print(SEPARATOR + flight.getFlightType());
 
-                // Class capacities string - either actual capacities or empty for BUDGET
                 StringBuilder classCapacitiesSb = new StringBuilder();
                 if (flight.getFlightType() == FlightType.COMMERCIAL) {
                     Map<CommercialClassType, Integer> capacities = flight.getClassCapacities();
                     List<Map.Entry<CommercialClassType, Integer>> sortedCapacities = new ArrayList<>(capacities.entrySet());
-                    sortedCapacities.sort(Comparator.comparing(entry -> entry.getKey().ordinal())); 
+                    sortedCapacities.sort(Comparator.comparing(entry -> entry.getKey().ordinal()));
                     
                     boolean first = true;
                     for (Map.Entry<CommercialClassType, Integer> entry : sortedCapacities) {
@@ -170,15 +164,14 @@ public class FlightDataManager implements DataManager {
                         first = false;
                     }
                 }
-                out.print(SEPARATOR + classCapacitiesSb.toString()); 
+                out.print(SEPARATOR + classCapacitiesSb.toString());
 
                 out.print(SEPARATOR + flight.isDeleted());
 
-                // Occupied seats map
                 StringBuilder occupiedSeatsSb = new StringBuilder();
                 Map<CommercialClassType, Integer> occupiedSeats = flight.getOccupiedSeatsMap();
                 List<Map.Entry<CommercialClassType, Integer>> sortedOccupiedSeats = new ArrayList<>(occupiedSeats.entrySet());
-                sortedOccupiedSeats.sort(Comparator.comparing(entry -> entry.getKey().ordinal())); 
+                sortedOccupiedSeats.sort(Comparator.comparing(entry -> entry.getKey().ordinal()));
 
                 boolean firstOccupied = true;
                 for (Map.Entry<CommercialClassType, Integer> entry : sortedOccupiedSeats) {
@@ -188,7 +181,7 @@ public class FlightDataManager implements DataManager {
                     occupiedSeatsSb.append(entry.getKey().name()).append(KEY_VALUE_SEPARATOR).append(entry.getValue());
                     firstOccupied = false;
                 }
-                out.println(SEPARATOR + occupiedSeatsSb.toString()); 
+                out.println(SEPARATOR + occupiedSeatsSb.toString());
             }
         }
     }

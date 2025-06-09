@@ -10,7 +10,6 @@ public enum CommercialClassType {
     PREMIUM_ECONOMY("Premium Economy"),
     BUSINESS("Business"),
     FIRST("First");
-    // Do NOT add a 'NONE' value here, as it's not a valid booking class.
 
     private final String className;
     private final double multiplier;

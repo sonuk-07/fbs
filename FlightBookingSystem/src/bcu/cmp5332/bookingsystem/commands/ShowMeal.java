@@ -15,8 +15,8 @@ public class ShowMeal implements Command {
 
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
-        Meal meal = flightBookingSystem.getMealByID(mealId); // Gets active meal
-        if (meal == null) { // getMealByID already throws, but defensive check
+        Meal meal = flightBookingSystem.getMealByID(mealId);
+        if (meal == null) {
             throw new FlightBookingSystemException("Meal ID not found: " + mealId);
         }
         System.out.println(meal.getDetailsLong());

@@ -99,17 +99,9 @@ public class RebookFlight implements Command {
         } catch (IOException e) {
             throw new FlightBookingSystemException("Error reading input during rebooking confirmation: " + e.getMessage());
         }
-
-        // Removed meal and return flight handling from here as they are not part of this simplified rebook
-        // Meal oldMeal = bookingToRebook.getMeal();
-        // Flight oldReturnFlight = bookingToRebook.getReturnFlight();
-        // CommercialClassType oldClass = bookingToRebook.getBookedClass();
-
         flightBookingSystem.cancelBooking(customer, oldFlight);
         System.out.println("Old booking for Flight " + oldFlight.getFlightNumber() + " cancelled as part of rebooking.");
-
         try {
-            // New booking for new flight. Meal is null by default for simplicity in rebook.
             flightBookingSystem.addBooking(customer, newFlight, null, newClass, null);
             System.out.println("New booking created for Flight " + newFlight.getFlightNumber() + " in " + newClass.getClassName() + " class.");
         } catch (FlightBookingSystemException e) {

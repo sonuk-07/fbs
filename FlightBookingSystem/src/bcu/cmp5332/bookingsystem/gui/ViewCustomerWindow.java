@@ -7,6 +7,7 @@ import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,7 +30,7 @@ public class ViewCustomerWindow implements ActionListener {
 
     private MainWindow mainWindow;
     private FlightBookingSystem fbs;
-    private JPanel panel;
+    private JPanel mainPanel;
     
     private JTable customersTable;
     private DefaultTableModel customersTableModel;
@@ -39,7 +40,6 @@ public class ViewCustomerWindow implements ActionListener {
     private JMenuItem removeCustomerMenuItem;
     
     private boolean showAllCustomers = false;
-    private boolean isVisible = false; // This flag seems redundant if the panel is always being added/removed by MainWindow
 
     public ViewCustomerWindow(MainWindow mainWindow, FlightBookingSystem fbs) {
         this.mainWindow = mainWindow;
@@ -48,7 +48,19 @@ public class ViewCustomerWindow implements ActionListener {
     }
 
     private void initializeComponents() {
-        panel = new JPanel(new BorderLayout());
+        mainPanel = new JPanel(new BorderLayout(DesignConstants.MAIN_PANEL_H_GAP, DesignConstants.MAIN_PANEL_V_GAP));
+        mainPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
+        mainPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
+
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        headerPanel.setBackground(DesignConstants.PRIMARY_BLUE);
+        headerPanel.setBorder(DesignConstants.HEADER_PANEL_BORDER);
+        
+        titleLabel = new JLabel("Customers");
+        titleLabel.setFont(DesignConstants.HEADER_FONT);
+        titleLabel.setForeground(Color.WHITE);
+        headerPanel.add(titleLabel);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
         
         String[] columns = new String[]{
             "ID", "Name", "Phone", "Email", "Age", "Gender", "Preferred Meal", "Status"
@@ -65,26 +77,27 @@ public class ViewCustomerWindow implements ActionListener {
         setupTable();
         setupPopupMenu();
         
-        titleLabel = new JLabel();
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        
-        panel.add(titleLabel, BorderLayout.NORTH);
-        panel.add(new JScrollPane(customersTable), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(customersTable);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setBorder(DesignConstants.SCROLL_PANE_BORDER);
+
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
     private void setupTable() {
-        customersTable.setRowHeight(30);
-        customersTable.setShowGrid(true);
-        customersTable.setGridColor(new Color(220, 220, 220));
-        customersTable.setSelectionBackground(new Color(230, 240, 255));
-        customersTable.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        customersTable.setFont(DesignConstants.TABLE_ROW_FONT);
+        customersTable.getTableHeader().setFont(DesignConstants.TABLE_HEADER_FONT);
+        customersTable.setRowHeight(DesignConstants.TABLE_ROW_HEIGHT);
+        customersTable.setFillsViewportHeight(true);
         
-        customersTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
-        customersTable.getTableHeader().setBackground(new Color(245, 245, 250));
-        customersTable.getTableHeader().setForeground(new Color(60, 60, 60));
+        customersTable.setShowGrid(true);
+        customersTable.setGridColor(DesignConstants.TABLE_GRID_COLOR);
+        customersTable.setSelectionBackground(DesignConstants.TABLE_SELECTION_BACKGROUND);
+        
+        customersTable.getTableHeader().setBackground(DesignConstants.PRIMARY_BLUE.brighter());
+        customersTable.getTableHeader().setForeground(DesignConstants.TEXT_DARK);
         customersTable.getTableHeader().setReorderingAllowed(false);
         
-        // Set column widths
         customersTable.getColumnModel().getColumn(0).setPreferredWidth(40);
         customersTable.getColumnModel().getColumn(1).setPreferredWidth(120);
         customersTable.getColumnModel().getColumn(2).setPreferredWidth(90);
@@ -94,7 +107,6 @@ public class ViewCustomerWindow implements ActionListener {
         customersTable.getColumnModel().getColumn(6).setPreferredWidth(100);
         customersTable.getColumnModel().getColumn(7).setPreferredWidth(70);
 
-        // Center align specific columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         customersTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
@@ -132,7 +144,9 @@ public class ViewCustomerWindow implements ActionListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && customersTable.getSelectedRow() != -1) {
-                    viewSelectedCustomerDetails();
+                    if (customersTableModel.getRowCount() > 0 && customersTableModel.getValueAt(customersTable.getSelectedRow(), 0) instanceof Integer) {
+                        viewSelectedCustomerDetails();
+                    }
                 }
             }
 
@@ -147,13 +161,14 @@ public class ViewCustomerWindow implements ActionListener {
     }
 
     public JPanel getPanel() {
-        return this.panel;
+        return this.mainPanel;
     }
 
     public void displayCustomers(boolean showAll) {
         this.showAllCustomers = showAll;
-        this.isVisible = true; // This line won't directly control visibility, but signals the state.
         
+        customersTableModel.setRowCount(0);
+
         List<Customer> customersList;
         String tableTitle;
 
@@ -165,7 +180,18 @@ public class ViewCustomerWindow implements ActionListener {
             tableTitle = "Active Customers";
         }
 
-        customersTableModel.setRowCount(0); // Clear existing rows
+        if (customersList.isEmpty()) {
+            customersTable.setFont(DesignConstants.TABLE_EMPTY_MESSAGE_FONT);
+            customersTable.setForeground(DesignConstants.TEXT_DARK.darker());
+            customersTable.clearSelection();
+            customersTableModel.addRow(new Object[]{"", "", "", "No customers to display.", "", "", "", ""});
+            titleLabel.setText(tableTitle);
+            return;
+        }
+        
+        customersTable.setFont(DesignConstants.TABLE_ROW_FONT);
+        customersTable.setForeground(DesignConstants.TEXT_DARK);
+
         for (Customer customer : customersList) {
             String status = customer.isDeleted() ? "Removed" : "Active";
             customersTableModel.addRow(new Object[]{
@@ -199,9 +225,13 @@ public class ViewCustomerWindow implements ActionListener {
             return;
         }
 
+        if (customersTableModel.getRowCount() > 0 && !(customersTableModel.getValueAt(selectedRow, 0) instanceof Integer)) {
+            JOptionPane.showMessageDialog(mainWindow, "No customer details to display for this row.", "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         int customerId = (int) customersTableModel.getValueAt(selectedRow, 0);
         try {
-            // Using getCustomerByID from FlightBookingSystem
             Customer selectedCustomer = fbs.getCustomerByID(customerId);
             if (selectedCustomer == null) {
                 JOptionPane.showMessageDialog(mainWindow, "Customer details could not be retrieved.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -212,7 +242,7 @@ public class ViewCustomerWindow implements ActionListener {
             JOptionPane.showMessageDialog(mainWindow, "Error viewing customer details: " + ex.getMessage(), "Customer Details Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(mainWindow, "An unexpected error occurred: " + ex.getMessage(), "Customer Details Error", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace(); // For debugging
+            ex.printStackTrace();
         }
     }
 
@@ -223,6 +253,11 @@ public class ViewCustomerWindow implements ActionListener {
             return;
         }
         
+        if (customersTableModel.getRowCount() > 0 && !(customersTableModel.getValueAt(selectedRow, 0) instanceof Integer)) {
+            JOptionPane.showMessageDialog(mainWindow, "Cannot delete 'No customers to display.' row.", "Invalid Selection", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         String status = (String) customersTableModel.getValueAt(selectedRow, 7);
         if (status.equals("Removed")) {
             JOptionPane.showMessageDialog(mainWindow, "This customer has already been removed.", "Already Removed", JOptionPane.INFORMATION_MESSAGE);
@@ -242,13 +277,13 @@ public class ViewCustomerWindow implements ActionListener {
                 boolean removed = fbs.removeCustomerById(customerIdToDelete);
 
                 if (removed) {
-                    FlightBookingSystemData.store(fbs); // Save changes
+                    FlightBookingSystemData.store(fbs);
                     
                     JOptionPane.showMessageDialog(mainWindow,
                         "Customer " + customerName + " (ID: " + customerIdToDelete + ") has been successfully marked as removed.",
                         "Deletion Successful", JOptionPane.INFORMATION_MESSAGE);
                     
-                    displayCustomers(showAllCustomers); // Refresh the display based on current view mode
+                    displayCustomers(showAllCustomers);
                 } else {
                     JOptionPane.showMessageDialog(mainWindow,
                         "Customer with ID " + customerIdToDelete + " was not found or could not be removed.",
@@ -259,23 +294,30 @@ public class ViewCustomerWindow implements ActionListener {
                 JOptionPane.showMessageDialog(mainWindow, "Error deleting customer: " + ex.getMessage(), "Deletion Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(mainWindow, "An unexpected error occurred during deletion: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace(); // For debugging
+                ex.printStackTrace();
             }
         }
     }
 
 	public void refreshView() {
-		// TODO Auto-generated method stub
-		
+		displayCustomers(showAllCustomers);
 	}
 
 	public void cleanup() {
-		// TODO Auto-generated method stub
-		
+        if (mainPanel != null) {
+            mainPanel.removeAll();
+            mainPanel.revalidate();
+            mainPanel.repaint();
+        }
+        mainPanel = null;
+        customersTable = null;
+        customersTableModel = null;
+        fbs = null;
+        mainWindow = null;
+        System.out.println("ViewCustomerWindow cleaned up.");
 	}
 
 	public boolean isVisible() {
-		// TODO Auto-generated method stub
-		return false;
+		return mainPanel != null && mainPanel.isShowing();
 	}
 }

@@ -12,7 +12,6 @@ public class ListFlights implements Command {
 
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
-        // getFlights() now automatically filters for future and non-deleted flights
         List<Flight> flights = flightBookingSystem.getFlights();
         if (flights.isEmpty()) {
             System.out.println("No active future flights in the system.");
@@ -23,8 +22,6 @@ public class ListFlights implements Command {
         for (Flight flight : flights) {
             StringBuilder flightInfo = new StringBuilder();
             flightInfo.append(flight.getDetailsShort());
-
-            // Append dynamic prices for each class
             for (CommercialClassType classType : flight.getAvailableClasses()) {
                 try {
                     flightInfo.append(" | ").append(classType.getClassName()).append(": £").append(flight.getDynamicPrice(classType, flightBookingSystem.getSystemDate()));

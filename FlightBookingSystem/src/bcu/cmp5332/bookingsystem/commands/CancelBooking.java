@@ -7,7 +7,6 @@ import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.Customer;
 import bcu.cmp5332.bookingsystem.model.Flight;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
-import bcu.cmp5332.bookingsystem.model.Booking; // Import Booking class
 
 /**
  * Command to cancel an existing flight booking.
@@ -52,11 +51,6 @@ public class CancelBooking implements Command {
         if (flight == null) {
             throw new FlightBookingSystemException("Flight not found with ID: " + flightId);
         }
-        
-        // The core logic for finding the booking, applying the fee, and removing passengers
-        // is now in FlightBookingSystem.cancelBooking.
         flightBookingSystem.cancelBooking(customer, flight);
-        
-        // Success message is printed by FlightBookingSystem.cancelBooking now.
     }
 }

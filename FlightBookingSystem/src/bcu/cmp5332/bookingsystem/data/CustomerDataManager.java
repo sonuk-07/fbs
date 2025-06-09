@@ -3,7 +3,7 @@ package bcu.cmp5332.bookingsystem.data;
 import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.Customer;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
-import bcu.cmp5332.bookingsystem.model.MealType; // NEW: Import MealType
+import bcu.cmp5332.bookingsystem.model.MealType;
 
 import java.io.*;
 import java.util.Scanner;
@@ -21,8 +21,6 @@ public class CustomerDataManager implements DataManager {
                 String line = sc.nextLine();
                 String[] properties = line.split(SEPARATOR, -1);
 
-                // Expected fields: id, name, phone, email, age, gender, preferredMealType, isDeleted
-                // Total 8 fields. Minimum 7 for basic customer data.
                 if (properties.length < 7) {
                     throw new FlightBookingSystemException("Malformed customer line at " + line_idx + ": " + line + " (Too few fields)");
                 }
@@ -34,22 +32,20 @@ public class CustomerDataManager implements DataManager {
                     String email = properties[3];
                     int age = Integer.parseInt(properties[4]);
                     String gender = properties[5];
-                    // NEW: Parse Preferred Meal Type
                     MealType preferredMealType = MealType.valueOf(properties[6].toUpperCase());
 
                     boolean isDeleted = false;
-                    if (properties.length > 7) { // Check if 'isDeleted' property exists (now at index 7)
+                    if (properties.length > 7) {
                         isDeleted = Boolean.parseBoolean(properties[7]);
                     }
 
-                    // UPDATED Customer constructor call
                     Customer customer = new Customer(id, name, phone, email, age, gender, preferredMealType);
                     customer.setDeleted(isDeleted);
                     fbs.addCustomer(customer);
 
                 } catch (NumberFormatException ex) {
                     throw new FlightBookingSystemException("Unable to parse customer ID/age on line " + line_idx + ": " + ex.getMessage(), ex);
-                } catch (IllegalArgumentException ex) { // For MealType.valueOf
+                } catch (IllegalArgumentException ex) {
                     throw new FlightBookingSystemException("Invalid preferred meal type on line " + line_idx + ": " + ex.getMessage(), ex);
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     throw new FlightBookingSystemException("Malformed line at index " + line_idx + " in customer data (missing fields): " + line, ex);
@@ -69,7 +65,7 @@ public class CustomerDataManager implements DataManager {
                 out.print(customer.getEmail() + SEPARATOR);
                 out.print(customer.getAge() + SEPARATOR);
                 out.print(customer.getGender() + SEPARATOR);
-                out.print(customer.getPreferredMealType().name() + SEPARATOR); // NEW: Store preferred meal type
+                out.print(customer.getPreferredMealType().name() + SEPARATOR);
                 out.print(customer.isDeleted());
                 out.println();
             }

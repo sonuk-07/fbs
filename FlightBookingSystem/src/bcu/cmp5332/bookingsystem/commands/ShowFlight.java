@@ -16,13 +16,9 @@ public class ShowFlight implements Command {
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
         Flight flight = flightBookingSystem.getFlightByID(flightId);
-        
-        // Check if the flight was found and is not null
         if (flight == null) {
             throw new FlightBookingSystemException("Flight ID not found: " + flightId);
         }
-        
-        // Pass the systemDate to getDetailsLong()
         System.out.println(flight.getDetailsLong(flightBookingSystem.getSystemDate()));
     }
 }

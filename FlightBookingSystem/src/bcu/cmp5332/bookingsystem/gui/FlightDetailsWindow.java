@@ -14,6 +14,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.Map;
 import javax.swing.BorderFactory;
@@ -25,10 +27,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import java.time.format.DateTimeFormatter;
 
 public class FlightDetailsWindow extends JFrame implements ActionListener {
 
@@ -66,78 +68,87 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         }
 
         setTitle("Flight Details: " + flight.getFlightNumber());
-        setSize(600, 580);
+        // Increased window width slightly to accommodate wider table columns
+        setSize(680, 580); // Original: 600
         setResizable(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JPanel mainPanel = new JPanel(new BorderLayout(DesignConstants.MAIN_PANEL_H_GAP, DesignConstants.MAIN_PANEL_V_GAP));
+        mainPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
 
         JPanel infoPanel = new JPanel(new GridBagLayout());
         infoPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Basic Flight Information", TitledBorder.LEFT, TitledBorder.TOP,
-            new Font("SansSerif", Font.BOLD, 14), new Color(50, 50, 150)));
+            DesignConstants.ETCHED_BORDER, "Basic Flight Information", TitledBorder.LEFT, TitledBorder.TOP,
+            DesignConstants.TITLED_BORDER_FONT, DesignConstants.INFO_PANEL_TITLE_COLOR));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 5, 6, 5);
+        gbc.insets = new Insets(DesignConstants.INFO_PANEL_INSET_GAP_V, DesignConstants.INFO_PANEL_INSET_GAP_H, DesignConstants.INFO_PANEL_INSET_GAP_V, DesignConstants.INFO_PANEL_INSET_GAP_H);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
         int row = 0;
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Flight ID:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Flight ID:", true), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0; flightIdValueLabel.setText(String.valueOf(flight.getId()));
+        flightIdValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(flightIdValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Flight No:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Flight No:", true), gbc);
         gbc.gridx = 1; flightNoValueLabel.setText(flight.getFlightNumber());
+        flightNoValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(flightNoValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Origin:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Origin:", true), gbc);
         gbc.gridx = 1; originValueLabel.setText(flight.getOrigin());
+        originValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(originValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Destination:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Destination:", true), gbc);
         gbc.gridx = 1; destinationValueLabel.setText(flight.getDestination());
+        destinationValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(destinationValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Departure Date:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Departure Date:", true), gbc);
         gbc.gridx = 1; depDateValueLabel.setText(flight.getDepartureDate() != null ? 
-                             flight.getDepartureDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "N/A");
+                                     flight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "N/A");
+        depDateValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(depDateValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Economy Price (£):"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Economy Price (£):", true), gbc);
         gbc.gridx = 1; economyPriceValueLabel.setText(flight.getEconomyPrice().toPlainString());
+        economyPriceValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(economyPriceValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Total Capacity:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Total Capacity:", true), gbc);
         gbc.gridx = 1; totalCapacityValueLabel.setText(String.valueOf(flight.getCapacity()));
+        totalCapacityValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(totalCapacityValueLabel, gbc);
         row++;
         
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Flight Type:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Flight Type:", true), gbc);
         gbc.gridx = 1; flightTypeValueLabel.setText(flight.getFlightType() == FlightType.COMMERCIAL ? "Commercial" : "Budget");
+        flightTypeValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(flightTypeValueLabel, gbc);
         row++;
 
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Status:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Status:", true), gbc);
         gbc.gridx = 1; 
         statusValueLabel.setText(flight.isDeleted() ? "Removed" : "Active");
-        statusValueLabel.setForeground(flight.isDeleted() ? new Color(200, 50, 50) : new Color(50, 150, 50));
-        statusValueLabel.setFont(statusValueLabel.getFont().deriveFont(Font.BOLD, 12f));
+        statusValueLabel.setForeground(flight.isDeleted() ? DesignConstants.STATUS_CANCELLED_RED : DesignConstants.STATUS_ACTIVE_GREEN);
+        statusValueLabel.setFont(DesignConstants.STATUS_FONT);
         infoPanel.add(statusValueLabel, gbc);
 
         mainPanel.add(infoPanel, BorderLayout.NORTH);
 
         commercialClassPanel = new JPanel(new BorderLayout());
         commercialClassPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Seat Class Information (Available Seats)", TitledBorder.LEFT, TitledBorder.TOP,
-            new Font("SansSerif", Font.BOLD, 14), new Color(50, 50, 150)));
+            DesignConstants.ETCHED_BORDER, "Seat Class Information (Available Seats)", TitledBorder.LEFT, TitledBorder.TOP,
+            DesignConstants.TITLED_BORDER_FONT, DesignConstants.INFO_PANEL_TITLE_COLOR));
         commercialClassPanel.setVisible(true);
 
         if (flight.getFlightType() == FlightType.COMMERCIAL) {
@@ -152,50 +163,47 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
             JLabel budgetInfoLabel = new JLabel(
                 "<html><div style='text-align: center;'>" +
                 "Budget Flight: All " + flight.getCapacity() + " seats are Economy Class.<br>" +
-                "Available Seats: <span style='font-weight: bold; color: " + (availableEconomy > 0 ? "green" : "red") + ";'>" + availableEconomy + "</span></div></html>"
+                "Available Seats: <span style='font-weight: bold; color: " + (availableEconomy > 0 ? toHtmlColor(DesignConstants.STATUS_ACTIVE_GREEN) : toHtmlColor(DesignConstants.STATUS_CANCELLED_RED)) + ";'>" + availableEconomy + "</span></div></html>"
             );
             budgetInfoLabel.setHorizontalAlignment(JLabel.CENTER);
             budgetInfoLabel.setVerticalAlignment(JLabel.CENTER);
-            budgetInfoLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            budgetInfoLabel.setFont(DesignConstants.BUDGET_INFO_FONT);
             commercialClassPanel.add(budgetInfoLabel, BorderLayout.CENTER);
         }
 
         mainPanel.add(commercialClassPanel, BorderLayout.CENTER);
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP));
 
-        removeFlightBtn.setFont(new Font("SansSerif", Font.BOLD, 12));
-        removeFlightBtn.setBackground(new Color(200, 70, 70));
-        removeFlightBtn.setForeground(Color.WHITE);
-        removeFlightBtn.setFocusPainted(false);
-        removeFlightBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createRaisedBevelBorder(),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
+        // Use DesignConstants.BUTTON_TEXT_COLOR for removeFlightBtn
+        customizeButton(removeFlightBtn, DesignConstants.REMOVE_BUTTON_RED, DesignConstants.REMOVE_BUTTON_HOVER_RED, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         bottomPanel.add(removeFlightBtn);
 
-        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 12));
-        closeBtn.setBackground(new Color(100, 150, 200));
-        closeBtn.setForeground(Color.WHITE);
-        closeBtn.setFocusPainted(false);
-        closeBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createRaisedBevelBorder(),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
+        // Use DesignConstants.BUTTON_TEXT_COLOR for closeBtn
+        customizeButton(closeBtn, DesignConstants.CLOSE_BUTTON_BG, DesignConstants.CLOSE_BUTTON_HOVER, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         bottomPanel.add(closeBtn);
         
-        removeFlightBtn.addActionListener(this);
-        closeBtn.addActionListener(this);
-
         if (flight.isDeleted()) {
             removeFlightBtn.setEnabled(false);
             removeFlightBtn.setText("Flight Already Removed");
+            removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
+            removeFlightBtn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {}
+                @Override
+                public void mouseExited(MouseEvent e) {}
+            });
         } else {
-            // FIX: Check if flight has passengers instead of bookings
             if (!flight.getPassengers().isEmpty()) { 
-                 removeFlightBtn.setEnabled(false);
-                 removeFlightBtn.setText("Cannot Remove (Has Passengers)"); // Updated message
-                 removeFlightBtn.setBackground(new Color(180, 180, 180));
+                removeFlightBtn.setEnabled(false);
+                removeFlightBtn.setText("Cannot Remove (Has Passengers)");
+                removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
+                removeFlightBtn.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {}
+                    @Override
+                    public void mouseExited(MouseEvent e) {}
+                });
             }
         }
 
@@ -204,6 +212,37 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         this.getContentPane().add(mainPanel);
         setLocationRelativeTo(mw);
         setVisible(true);
+    }
+
+    private JLabel createLabel(String text, boolean isBold) {
+        JLabel label = new JLabel(text);
+        label.setForeground(DesignConstants.TEXT_DARK);
+        label.setFont(isBold ? DesignConstants.INFO_LABEL_FONT.deriveFont(Font.BOLD) : DesignConstants.INFO_LABEL_FONT);
+        return label;
+    }
+
+    private void customizeButton(JButton button, Color bgColor, Color hoverColor, javax.swing.border.Border border, Color textColor) {
+        button.setFont(DesignConstants.BUTTON_FONT);
+        button.setBackground(bgColor);
+        button.setForeground(textColor);
+        button.setFocusPainted(false);
+        button.setBorder(border);
+        button.addActionListener(this);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor);
+            }
+        });
+    }
+
+    private String toHtmlColor(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     private void setupCommercialClassTable() {
@@ -238,18 +277,19 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
 
         classCapacityTable = new JTable(classCapacityTableModel);
         
-        classCapacityTable.setRowHeight(25);
+        classCapacityTable.setRowHeight(DesignConstants.TABLE_ROW_HEIGHT);
         classCapacityTable.setShowGrid(true);
-        classCapacityTable.setGridColor(new Color(220, 220, 220));
-        classCapacityTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        classCapacityTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        classCapacityTable.getTableHeader().setBackground(new Color(230, 230, 240));
-        classCapacityTable.getTableHeader().setForeground(new Color(40, 40, 40));
+        classCapacityTable.setGridColor(DesignConstants.TABLE_GRID_COLOR);
+        classCapacityTable.setFont(DesignConstants.TABLE_ROW_FONT);
+        classCapacityTable.getTableHeader().setFont(DesignConstants.TABLE_HEADER_FONT);
+        classCapacityTable.getTableHeader().setBackground(DesignConstants.TABLE_HEADER_BG_COLOR);
+        classCapacityTable.getTableHeader().setForeground(DesignConstants.TABLE_HEADER_FOREGROUND_COLOR);
         classCapacityTable.getTableHeader().setReorderingAllowed(false);
 
-        classCapacityTable.getColumnModel().getColumn(0).setPreferredWidth(120);
-        classCapacityTable.getColumnModel().getColumn(1).setPreferredWidth(80);
-        classCapacityTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        // Increased preferred widths for better visibility
+        classCapacityTable.getColumnModel().getColumn(0).setPreferredWidth(150); // Original: 120
+        classCapacityTable.getColumnModel().getColumn(1).setPreferredWidth(100); // Original: 80
+        classCapacityTable.getColumnModel().getColumn(2).setPreferredWidth(120); // Original: 100
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -286,9 +326,16 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
                         "Removal Successful", JOptionPane.INFORMATION_MESSAGE);
                     
                     statusValueLabel.setText("Removed");
-                    statusValueLabel.setForeground(new Color(200, 50, 50));
+                    statusValueLabel.setForeground(DesignConstants.STATUS_CANCELLED_RED);
                     removeFlightBtn.setEnabled(false);
                     removeFlightBtn.setText("Flight Already Removed");
+                    removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
+                    removeFlightBtn.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseEntered(MouseEvent e) {}
+                        @Override
+                        public void mouseExited(MouseEvent e) {}
+                    });
                     
                     mw.displayFlights();
                     this.dispose();
@@ -325,18 +372,19 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
                 }
                 
                 if (availableSeats == 0) {
-                    setBackground(isSelected ? new Color(255, 180, 180) : new Color(255, 220, 220));
-                    setForeground(new Color(180, 0, 0));
+                    setBackground(isSelected ? DesignConstants.AVAILABLE_SEATS_NONE_BG.darker() : DesignConstants.AVAILABLE_SEATS_NONE_BG);
+                    setForeground(DesignConstants.AVAILABLE_SEATS_NONE_FG);
                 } else if (totalCapacity > 0 && availableSeats < totalCapacity * 0.3) {
-                    setBackground(isSelected ? new Color(255, 220, 180) : new Color(255, 240, 220));
-                    setForeground(new Color(200, 100, 0));
+                    setBackground(isSelected ? DesignConstants.AVAILABLE_SEATS_LOW_BG.darker() : DesignConstants.AVAILABLE_SEATS_LOW_BG);
+                    setForeground(DesignConstants.AVAILABLE_SEATS_LOW_FG);
                 } else {
-                    setBackground(isSelected ? new Color(180, 255, 180) : new Color(220, 255, 220));
-                    setForeground(new Color(0, 120, 0));
+                    // Adjusted background for darker green
+                    setBackground(isSelected ? DesignConstants.AVAILABLE_SEATS_FULL.darker() : DesignConstants.AVAILABLE_SEATS_FULL);
+                    setForeground(DesignConstants.BUTTON_TEXT_COLOR); // Changed to black for better contrast
                 }
             } else {
-                setBackground(isSelected ? table.getSelectionBackground() : new Color(250, 250, 250));
-                setForeground(new Color(150, 150, 150));
+                setBackground(isSelected ? table.getSelectionBackground() : DesignConstants.TABLE_CELL_DEFAULT_BG);
+                setForeground(DesignConstants.TEXT_MUTED);
             }
             
             return this;

@@ -30,7 +30,7 @@ public class FlightBookingSystem {
     private int nextFlightId = 1;
     private int nextCustomerId = 1;
     private int nextMealId = 1;
-    private int nextBookingId = 1; // ADDED: Next booking ID
+    private int nextBookingId = 1;
 
     /**
      * Generates the next available unique flight ID.
@@ -68,7 +68,6 @@ public class FlightBookingSystem {
         return nextMealId;
     }
 
-    // ADDED: Booking ID generation
     public int generateNextBookingId() {
         while (bookings.containsKey(nextBookingId)) {
             nextBookingId++;
@@ -76,7 +75,6 @@ public class FlightBookingSystem {
         return nextBookingId;
     }
 
-    // ADDED: Setter for nextBookingId (for use in data loading)
     public void setNextBookingId(int id) {
         this.nextBookingId = id;
     }
@@ -343,10 +341,8 @@ public class FlightBookingSystem {
         BigDecimal outboundBookedPrice = outbound.getDynamicPrice(bookedClass, systemDate);
         BigDecimal returnBookedPrice = (returnFlight != null) ? returnFlight.getDynamicPrice(bookedClass, systemDate) : BigDecimal.ZERO;
 
-        // Generate a new booking ID
         int newBookingId = generateNextBookingId();
 
-        // Pass the generated ID to the Booking constructor
         Booking booking = new Booking(newBookingId, customer, outbound, returnFlight, systemDate, bookedClass, outboundBookedPrice, returnBookedPrice, selectedMeal);
 
         customer.addBooking(booking);
@@ -365,8 +361,6 @@ public class FlightBookingSystem {
      */
     public void addBookingWithoutFlightUpdate(Booking booking) {
         bookings.put(booking.getId(), booking);
-        // Customer.addBooking(booking) is usually done by the data manager or main addBooking method.
-        // It's assumed the customer object already has this booking linked or will be linked externally.
     }
 
 
@@ -394,27 +388,17 @@ public class FlightBookingSystem {
             throw new FlightBookingSystemException("No active booking found for customer " + customer.getName() + " on flight " + flight.getFlightNumber());
         }
 
-        // Calculate cancellation fee
         BigDecimal cancellationFee = calculateCancellationFee(bookingToCancel);
         bookingToCancel.setCancellationFee(cancellationFee);
 
-        // Mark the booking as cancelled
         bookingToCancel.setCancelled(true);
 
-        // Remove customer from the specific flight segment's passenger list
         if (bookingToCancel.getOutboundFlight().equals(flight)) {
             bookingToCancel.getOutboundFlight().removePassenger(customer, bookingToCancel.getBookedClass());
         } else if (bookingToCancel.getReturnFlight() != null && bookingToCancel.getReturnFlight().equals(flight)) {
             bookingToCancel.getReturnFlight().removePassenger(customer, bookingToCancel.getBookedClass());
         }
 
-        // Note: The `customer.cancelBookingForFlight(flight.getId());` line
-        // in your original code seems to be trying to *remove* the booking
-        // from the customer's list. With `isCancelled` flag, you typically
-        // just mark it as cancelled, not remove it from the list entirely,
-        // for historical/audit purposes. If `customer.cancelBookingForFlight`
-        // actually sets the `isCancelled` flag on the booking, that's fine.
-        // If it removes it, you might want to reconsider that for auditing.
 
         System.out.println("Booking ID " + bookingToCancel.getId() + " for Flight " + flight.getFlightNumber() + " cancelled. Cancellation Fee: £" + cancellationFee);
     }
@@ -451,7 +435,6 @@ public class FlightBookingSystem {
      * @return The rebooking fee, rounded to two decimal places.
      */
 
-    // Changed access modifier from private to public
     public BigDecimal calculateRebookFee(Booking booking, Flight newFlight, CommercialClassType newClass) {
         return new BigDecimal("30.00").setScale(2, RoundingMode.HALF_UP);
     }

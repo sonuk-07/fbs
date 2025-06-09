@@ -20,7 +20,7 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
     private FlightBookingSystem fbs;
 
     private JComboBox<Customer> customerComboBox;
-    private JComboBox<BookingSegmentWrapper> oldFlightComboBox; // Represents a specific flight segment in a booking
+    private JComboBox<BookingSegmentWrapper> oldFlightComboBox;
     private JComboBox<Flight> newFlightComboBox;
     private JComboBox<CommercialClassType> newClassComboBox;
 
@@ -33,8 +33,8 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
     private JButton rebookButton;
     private JButton cancelButton;
 
-    private Booking selectedBooking; // The actual booking object
-    private Flight selectedOldFlight; // The specific flight segment from the booking to rebook
+    private Booking selectedBooking;
+    private Flight selectedOldFlight;
 
     public RebookFlightWindow(MainWindow mw) {
         this.mw = mw;
@@ -56,7 +56,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Customer selection
         gbc.gridx = 0; gbc.gridy = 0;
         mainPanel.add(new JLabel("Select Customer:"), gbc);
         gbc.gridx = 1;
@@ -68,7 +67,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         loadCustomersButton.addActionListener(e -> loadCustomers());
         mainPanel.add(loadCustomersButton, gbc);
 
-        // Old Flight to Rebook (from customer's bookings)
         gbc.gridx = 0; gbc.gridy = 1;
         mainPanel.add(new JLabel("Old Flight to Rebook:"), gbc);
         gbc.gridx = 1;
@@ -80,7 +78,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         loadOldFlightsButton.addActionListener(this);
         mainPanel.add(loadOldFlightsButton, gbc);
 
-        // New Flight
         gbc.gridx = 0; gbc.gridy = 2;
         mainPanel.add(new JLabel("New Flight:"), gbc);
         gbc.gridx = 1;
@@ -92,7 +89,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         loadNewFlightsButton.addActionListener(e -> loadNewFlights());
         mainPanel.add(loadNewFlightsButton, gbc);
 
-        // New Class
         gbc.gridx = 0; gbc.gridy = 3;
         mainPanel.add(new JLabel("New Class:"), gbc);
         gbc.gridx = 1;
@@ -100,7 +96,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         newClassComboBox.addActionListener(this);
         mainPanel.add(newClassComboBox, gbc);
 
-        // Rebooking Fee Display
         gbc.gridx = 0; gbc.gridy = 4;
         mainPanel.add(new JLabel("Rebooking Fee:"), gbc);
         gbc.gridx = 1;
@@ -112,7 +107,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         calculateFeeButton.addActionListener(this);
         mainPanel.add(calculateFeeButton, gbc);
 
-        // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rebookButton = new JButton("Rebook Flight");
         rebookButton.addActionListener(this);
@@ -126,7 +120,7 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         add(buttonPanel, BorderLayout.SOUTH);
 
         loadCustomers();
-        loadNewFlights(); // Load all available flights for new booking
+        loadNewFlights();
         setVisible(true);
     }
 
@@ -143,9 +137,9 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
                 selectedBooking = null;
                 selectedOldFlight = null;
             }
-            calculateRebookFee(); // Recalculate fee if old flight changes
+            calculateRebookFee();
         } else if (e.getSource() == newFlightComboBox || e.getSource() == newClassComboBox) {
-            calculateRebookFee(); // Recalculate fee if new flight/class changes
+            calculateRebookFee();
         } else if (e.getSource() == loadOldFlightsButton) {
             loadOldFlightsForSelectedCustomer();
         } else if (e.getSource() == loadNewFlightsButton) {
@@ -175,7 +169,7 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         Customer customer = (Customer) customerComboBox.getSelectedItem();
         if (customer != null) {
             for (Booking booking : customer.getBookings()) {
-                if (!booking.isCancelled()) { // Only consider active bookings
+                if (!booking.isCancelled()) {
                     if (booking.getOutboundFlight() != null) {
                         oldFlightComboBox.addItem(new BookingSegmentWrapper(booking, booking.getOutboundFlight(), "Outbound"));
                     }
@@ -187,21 +181,20 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         }
         selectedBooking = null;
         selectedOldFlight = null;
-        calculateRebookFee(); // Reset fee
+        calculateRebookFee();
     }
 
     private void loadNewFlights() {
         newFlightComboBox.removeAllItems();
         newFlightComboBox.addItem(null);
         try {
-            // Get all active flights that have seats left
             fbs.getFlights().stream()
                .filter(Flight::hasAnySeatsLeft)
                .forEach(newFlightComboBox::addItem);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error loading new flights: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-        calculateRebookFee(); // Reset fee
+        calculateRebookFee();
     }
 
     private void calculateRebookFee() {
@@ -240,7 +233,6 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         }
 
         try {
-            // Check availability of new flight/class before proceeding
             if (!newFlight.isClassAvailable(newClass)) {
                  throw new FlightBookingSystemException("New flight " + newFlight.getFlightNumber() + " has no seats left in " + newClass.getClassName() + " class.");
             }
@@ -252,13 +244,9 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
                     "Confirm Rebooking", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                // Perform the rebooking using the FlightBookingSystem
-                // The rebookFee is just calculated, not explicitly passed to addBooking.
-                // The existing RebookFlight command cancels the old and creates a new booking.
                 fbs.cancelBooking(selectedBooking.getCustomer(), selectedOldFlight);
-                fbs.addBooking(selectedBooking.getCustomer(), newFlight, null, newClass, null); // Assuming new booking is one-way and no meal for simplicity as in command
+                fbs.addBooking(selectedBooking.getCustomer(), newFlight, null, newClass, null);
 
-                // Save data after successful rebooking
                 FlightBookingSystemData.store(fbs);
 
                 JOptionPane.showMessageDialog(this, "Flight rebooked successfully! Old booking cancelled, new booking created.",
@@ -277,11 +265,10 @@ public class RebookFlightWindow extends JFrame implements ActionListener {
         }
     }
 
-    // Helper class to represent a specific flight segment (outbound/return) from a booking in the JComboBox
     private static class BookingSegmentWrapper {
         private Booking booking;
         private Flight flight;
-        private String segmentType; // "Outbound" or "Return"
+        private String segmentType;
 
         public BookingSegmentWrapper(Booking booking, Flight flight, String segmentType) {
             this.booking = booking;

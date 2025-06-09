@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.math.BigDecimal;
 
@@ -17,14 +19,14 @@ public class AddMealWindow extends JFrame implements ActionListener {
     private MainWindow mw;
 
     private JTextField nameText = new JTextField(20);
-    private JTextField descriptionText = new JTextField(25); // Longer for description
+    private JTextField descriptionText = new JTextField(25);
     private JTextField priceText = new JTextField(10);
-    private JComboBox<String> mealTypeComboBox; // <--- Correct: Use a single name
+    private JComboBox<String> mealTypeComboBox;
 
     private JButton addBtn = new JButton("Add Meal");
     private JButton cancelBtn = new JButton("Cancel");
 
-    private JPanel contentPanel; // <--- FIX: Declare contentPanel as a member variable
+    private JPanel contentPanel;
 
     public AddMealWindow(MainWindow mw) {
         this.mw = mw;
@@ -35,41 +37,61 @@ public class AddMealWindow extends JFrame implements ActionListener {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            // Handle look and feel exception
+            System.err.println("Could not set system look and feel: " + ex.getMessage());
         }
 
         setTitle("Add New Meal");
-        setSize(450, 350); // Adjusted size for better spacing
+        setSize(450, 350);
         setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        contentPanel = new JPanel(new GridBagLayout()); // <--- Initialize here
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
+        contentPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 5, 8, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
+        Font labelFont = DesignConstants.TABLE_ROW_FONT;
+        Font textFieldFont = DesignConstants.TABLE_ROW_FONT;
+        Color textColor = DesignConstants.TEXT_DARK;
+
         // Row 0: Name
         gbc.gridx = 0;
         gbc.gridy = 0;
-        contentPanel.add(new JLabel("Name:"), gbc);
+        JLabel nameLabel = new JLabel("Name:");
+        nameLabel.setFont(labelFont);
+        nameLabel.setForeground(textColor);
+        contentPanel.add(nameLabel, gbc);
         gbc.gridx = 1;
+        nameText.setFont(textFieldFont);
+        nameText.setForeground(textColor);
         contentPanel.add(nameText, gbc);
 
         // Row 1: Description
         gbc.gridx = 0;
         gbc.gridy = 1;
-        contentPanel.add(new JLabel("Description:"), gbc);
+        JLabel descriptionLabel = new JLabel("Description:");
+        descriptionLabel.setFont(labelFont);
+        descriptionLabel.setForeground(textColor);
+        contentPanel.add(descriptionLabel, gbc);
         gbc.gridx = 1;
+        descriptionText.setFont(textFieldFont);
+        descriptionText.setForeground(textColor);
         contentPanel.add(descriptionText, gbc);
 
         // Row 2: Price
         gbc.gridx = 0;
         gbc.gridy = 2;
-        contentPanel.add(new JLabel("Price (£):"), gbc);
+        JLabel priceLabel = new JLabel("Price (£):");
+        priceLabel.setFont(labelFont);
+        priceLabel.setForeground(textColor);
+        contentPanel.add(priceLabel, gbc);
         gbc.gridx = 1;
+        priceText.setFont(textFieldFont);
+        priceText.setForeground(textColor);
         contentPanel.add(priceText, gbc);
 
         // Row 3: Meal Type
@@ -77,15 +99,26 @@ public class AddMealWindow extends JFrame implements ActionListener {
         for (int i = 0; i < MealType.values().length; i++) {
             mealTypes[i] = MealType.values()[i].getDisplayName();
         }
-        mealTypeComboBox = new JComboBox<>(mealTypes); // <--- Correct: Only this line to initialize
+        mealTypeComboBox = new JComboBox<>(mealTypes);
 
         gbc.gridx = 0;
         gbc.gridy = 3;
-        contentPanel.add(new JLabel("Meal Type:"), gbc);
+        JLabel mealTypeLabel = new JLabel("Meal Type:");
+        mealTypeLabel.setFont(labelFont);
+        mealTypeLabel.setForeground(textColor);
+        contentPanel.add(mealTypeLabel, gbc);
         gbc.gridx = 1;
+        mealTypeComboBox.setFont(textFieldFont);
+        mealTypeComboBox.setForeground(textColor);
         contentPanel.add(mealTypeComboBox, gbc);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP));
+        buttonPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, DesignConstants.BUTTON_PANEL_BOTTOM_PADDING, 0));
+
+        customizeButton(addBtn);
+        customizeButton(cancelBtn);
+
         buttonPanel.add(addBtn);
         buttonPanel.add(cancelBtn);
 
@@ -97,6 +130,25 @@ public class AddMealWindow extends JFrame implements ActionListener {
         setLocationRelativeTo(mw);
 
         setVisible(true);
+    }
+
+    private void customizeButton(JButton button) {
+        button.setBackground(DesignConstants.BUTTON_BLUE);
+        button.setForeground(DesignConstants.BUTTON_TEXT_COLOR);
+        button.setFont(DesignConstants.BUTTON_FONT);
+        button.setFocusPainted(false);
+        button.setBorder(DesignConstants.BUTTON_PADDING_BORDER);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(DesignConstants.BUTTON_HOVER_BLUE);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(DesignConstants.BUTTON_BLUE);
+            }
+        });
     }
 
     @Override
@@ -147,8 +199,8 @@ public class AddMealWindow extends JFrame implements ActionListener {
             
             FlightBookingSystemData.store(mw.getFlightBookingSystem());
             
-            JOptionPane.showMessageDialog(this, 
-                "Meal '" + meal.getName() + "' (ID: " + meal.getId() + ") added successfully!", 
+            JOptionPane.showMessageDialog(this,
+                "Meal '" + meal.getName() + "' (ID: " + meal.getId() + ") added successfully!",
                 "Success", JOptionPane.INFORMATION_MESSAGE);
             
             mw.displayMeals();

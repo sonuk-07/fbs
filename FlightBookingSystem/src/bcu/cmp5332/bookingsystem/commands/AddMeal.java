@@ -14,20 +14,18 @@ public class AddMeal implements Command {
     private final String name;
     private final String description;
     private final BigDecimal price;
-    private final MealType type; // NEW FIELD
+    private final MealType type; 
 
-    // UPDATED CONSTRUCTOR
     public AddMeal(String name, String description, BigDecimal price, MealType type) {
         this.name = name;
         this.description = description;
         this.price = price;
-        this.type = type; // Initialize new field
+        this.type = type;
     }
 
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
         int nextId = flightBookingSystem.generateNextMealId();
-        // UPDATED Meal CONSTRUCTOR CALL
         Meal meal = new Meal(nextId, name, description, price, type);
         flightBookingSystem.addMeal(meal);
         System.out.println("Meal #" + meal.getId() + " added: " + meal.getName() + " (" + meal.getType().getDisplayName() + ") " + " (£" + meal.getPrice() + ")");

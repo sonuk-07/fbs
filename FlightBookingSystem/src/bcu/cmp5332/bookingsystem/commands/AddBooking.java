@@ -6,15 +6,13 @@ import bcu.cmp5332.bookingsystem.model.Flight;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 import bcu.cmp5332.bookingsystem.model.CommercialClassType;
 import bcu.cmp5332.bookingsystem.model.Meal;
-import bcu.cmp5332.bookingsystem.model.MealType; // Import MealType
+import bcu.cmp5332.bookingsystem.model.MealType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.stream.Collectors; // Import Collectors
-
 
 /**
  * Command to add a new booking to the flight booking system.
@@ -22,7 +20,6 @@ import java.util.stream.Collectors; // Import Collectors
  * commercial class, and meal preferences, calculates the total price,
  * and confirms the booking with the user.
  */
-
 public class AddBooking implements Command {
     private final int customerId;
     private final int outboundFlightId;
@@ -35,7 +32,6 @@ public class AddBooking implements Command {
      * @param outboundFlightId The ID of the outbound flight.
      * @param selectedClass The commercial class type for the booking.
      */
-
     public AddBooking(int customerId, int outboundFlightId, CommercialClassType selectedClass) {
         this(customerId, outboundFlightId, null, selectedClass);
     }
@@ -48,7 +44,6 @@ public class AddBooking implements Command {
      * @param returnFlightId The ID of the return flight (can be null for one-way).
      * @param selectedClass The commercial class type for the booking.
      */
-    
     public AddBooking(int customerId, int outboundFlightId, Integer returnFlightId, CommercialClassType selectedClass) {
         this.customerId = customerId;
         this.outboundFlightId = outboundFlightId;
@@ -72,8 +67,6 @@ public class AddBooking implements Command {
      * @throws FlightBookingSystemException If any business rule is violated (e.g., flight not found, no seats)
      * or if there's an error during input/output operations.
      */
-
-    
     @Override
     public void execute(FlightBookingSystem flightBookingSystem, BufferedReader reader) throws FlightBookingSystemException {
         try {
@@ -84,7 +77,6 @@ public class AddBooking implements Command {
                 returnFlight = flightBookingSystem.getFlightByID(returnFlightId);
             }
 
-            // --- Pre-booking Checks and Price Display ---
             if (!outbound.isClassAvailable(selectedClass)) {
                 throw new FlightBookingSystemException("Selected class is not available on outbound flight " + outbound.getFlightNumber() + " (ID: " + outbound.getId() + ").");
             }
@@ -104,7 +96,6 @@ public class AddBooking implements Command {
                 returnPrice = returnFlight.getDynamicPrice(selectedClass, flightBookingSystem.getSystemDate());
             }
 
-            // --- Meal Selection (UPDATED for customer preference) ---
             Meal selectedMeal = null;
             MealType preferredMealType = customer.getPreferredMealType();
             List<Meal> availableMeals = flightBookingSystem.getMealsFilteredByPreference(preferredMealType);
@@ -123,8 +114,7 @@ public class AddBooking implements Command {
                 try {
                     int mealId = Integer.parseInt(mealInput);
                     if (mealId != 0) {
-                        selectedMeal = flightBookingSystem.getMealByID(mealId); // This will throw if not found or deleted
-                        // Additional check: ensure selected meal matches preferred type if preference exists
+                        selectedMeal = flightBookingSystem.getMealByID(mealId);
                         if (preferredMealType != MealType.NONE && selectedMeal.getType() != preferredMealType) {
                             System.out.println("Warning: Selected meal type (" + selectedMeal.getType().getDisplayName() + ") does not match customer's preference (" + preferredMealType.getDisplayName() + "). Proceeding anyway.");
                         }
@@ -137,7 +127,6 @@ public class AddBooking implements Command {
             } else {
                 System.out.println("\nNo meal options available matching customer's preference.");
             }
-
 
             System.out.println("\n--- Booking Details ---");
             System.out.println("Customer: " + customer.getName() + " (ID: " + customer.getId() + ")");
@@ -158,7 +147,6 @@ public class AddBooking implements Command {
             System.out.println("Selected Meal: " + (selectedMeal != null ? selectedMeal.getName() + " (" + selectedMeal.getType().getDisplayName() + ")" : "None") + " (£" + mealPrice + ")");
             System.out.println("Total Estimated Booking Price (Flights + Meal): £" + totalBookingPrice.setScale(2, RoundingMode.HALF_UP));
 
-            // --- Confirmation ---
             System.out.print("Confirm booking? (yes/no): ");
             String confirmation = reader.readLine().trim().toLowerCase();
 
@@ -167,7 +155,6 @@ public class AddBooking implements Command {
                 return;
             }
 
-            // --- Proceed with Booking (if confirmed) ---
             flightBookingSystem.addBooking(customer, outbound, returnFlight, selectedClass, selectedMeal);
 
             System.out.println("Booking completed for Customer #" + customerId + " in " + selectedClass.getClassName() +

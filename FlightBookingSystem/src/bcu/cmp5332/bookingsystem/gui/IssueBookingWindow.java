@@ -1,52 +1,44 @@
 package bcu.cmp5332.bookingsystem.gui;
 
+import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData;
 import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.*;
-import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData; // Import FlightBookingSystemData
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException; // Keep this import for IOException
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-/**
- * GUI window for issuing new bookings in the flight booking system.
- * Allows users to select customers, flights, classes, and meals to create bookings.
- */
 public class IssueBookingWindow extends JFrame implements ActionListener {
 
     private MainWindow mw;
     private FlightBookingSystem fbs;
 
-    // Customer selection
     private JComboBox<Customer> customerComboBox;
     private JButton loadCustomersButton;
 
-    // Flight selection
     private JComboBox<Flight> outboundFlightComboBox;
-    private JComboBox<Flight> FlightreturnFlightComboBox;
+    private JComboBox<Flight> returnFlightComboBox;
     private JButton loadFlightsButton;
     private JCheckBox returnFlightCheckBox;
 
-    // Class selection
     private JComboBox<CommercialClassType> classComboBox;
 
-    // Meal selection
     private JComboBox<Meal> mealComboBox;
     private JButton loadMealsButton;
     private JLabel mealFilterLabel;
 
-    // Price display
     private JLabel outboundPriceLabel;
     private JLabel returnPriceLabel;
     private JLabel mealPriceLabel;
     private JLabel totalPriceLabel;
 
-    // Action buttons
     private JButton calculatePriceButton;
     private JButton issueBookingButton;
     private JButton cancelButton;
@@ -58,157 +50,250 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
     }
 
     private void initialize() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+            System.err.println("Could not set system look and feel: " + ex.getMessage());
+        }
+
         setTitle("Issue New Booking");
         setSize(600, 700);
+        setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(mw);
 
-        // Main panel with border layout
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
+        mainPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
 
-        // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 5, 8, 5);
         gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Customer selection section
-        gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Customer:"), gbc);
+        Font labelFont = DesignConstants.TABLE_ROW_FONT;
+        Font componentFont = DesignConstants.TABLE_ROW_FONT;
+        Color textColor = DesignConstants.TEXT_DARK;
 
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        int row = 0;
+
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel customerLabel = new JLabel("Customer:");
+        customerLabel.setFont(labelFont);
+        customerLabel.setForeground(textColor);
+        formPanel.add(customerLabel, gbc);
+
+        gbc.gridx = 1;
         customerComboBox = new JComboBox<>();
-        customerComboBox.setPreferredSize(new Dimension(250, 25));
+        customerComboBox.setPreferredSize(new Dimension(250, DesignConstants.COMPONENT_HEIGHT));
+        customerComboBox.setFont(componentFont);
+        customerComboBox.setForeground(textColor);
         formPanel.add(customerComboBox, gbc);
 
         gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
         loadCustomersButton = new JButton("Load Customers");
+        customizeButton(loadCustomersButton);
         loadCustomersButton.addActionListener(this);
         formPanel.add(loadCustomersButton, gbc);
+        row++;
 
-        // Outbound flight selection
-        gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Outbound Flight:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel outboundFlightLabel = new JLabel("Outbound Flight:");
+        outboundFlightLabel.setFont(labelFont);
+        outboundFlightLabel.setForeground(textColor);
+        formPanel.add(outboundFlightLabel, gbc);
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         outboundFlightComboBox = new JComboBox<>();
-        outboundFlightComboBox.setPreferredSize(new Dimension(250, 25));
+        outboundFlightComboBox.setPreferredSize(new Dimension(250, DesignConstants.COMPONENT_HEIGHT));
+        outboundFlightComboBox.setFont(componentFont);
+        outboundFlightComboBox.setForeground(textColor);
         outboundFlightComboBox.addActionListener(this);
         formPanel.add(outboundFlightComboBox, gbc);
 
         gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
         loadFlightsButton = new JButton("Load Flights");
+        customizeButton(loadFlightsButton);
         loadFlightsButton.addActionListener(this);
         formPanel.add(loadFlightsButton, gbc);
+        row++;
 
-        // Return flight checkbox
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridwidth = 2;
         returnFlightCheckBox = new JCheckBox("Include Return Flight");
+        returnFlightCheckBox.setFont(labelFont);
+        returnFlightCheckBox.setForeground(textColor);
+        returnFlightCheckBox.setBackground(DesignConstants.LIGHT_GRAY_BG);
         returnFlightCheckBox.addActionListener(this);
         formPanel.add(returnFlightCheckBox, gbc);
+        gbc.gridwidth = 1;
+        row++;
 
-        // Return flight selection
-        gbc.gridx = 0; gbc.gridy = 3;
-        formPanel.add(new JLabel("Return Flight:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel returnFlightActualLabel = new JLabel("Return Flight:");
+        returnFlightActualLabel.setFont(labelFont);
+        returnFlightActualLabel.setForeground(textColor);
+        formPanel.add(returnFlightActualLabel, gbc);
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-        FlightreturnFlightComboBox = new JComboBox<>();
-        FlightreturnFlightComboBox.setPreferredSize(new Dimension(250, 25));
-        FlightreturnFlightComboBox.setEnabled(false);
-        FlightreturnFlightComboBox.addActionListener(this);
-        formPanel.add(FlightreturnFlightComboBox, gbc);
+        returnFlightComboBox = new JComboBox<>();
+        returnFlightComboBox.setPreferredSize(new Dimension(250, DesignConstants.COMPONENT_HEIGHT));
+        returnFlightComboBox.setFont(componentFont);
+        returnFlightComboBox.setForeground(textColor);
+        returnFlightComboBox.setEnabled(false);
+        returnFlightComboBox.addActionListener(this);
+        formPanel.add(returnFlightComboBox, gbc);
+        row++;
 
-        // Class selection
-        gbc.gridx = 0; gbc.gridy = 4;
-        formPanel.add(new JLabel("Class:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel classLabel = new JLabel("Class:");
+        classLabel.setFont(labelFont);
+        classLabel.setForeground(textColor);
+        formPanel.add(classLabel, gbc);
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         classComboBox = new JComboBox<>(CommercialClassType.values());
+        classComboBox.setFont(componentFont);
+        classComboBox.setForeground(textColor);
         classComboBox.addActionListener(this);
         formPanel.add(classComboBox, gbc);
+        row++;
 
-        // Meal selection
-        gbc.gridx = 0; gbc.gridy = 5;
-        formPanel.add(new JLabel("Meal:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel mealLabel = new JLabel("Meal:");
+        mealLabel.setFont(labelFont);
+        mealLabel.setForeground(textColor);
+        formPanel.add(mealLabel, gbc);
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         mealComboBox = new JComboBox<>();
-        mealComboBox.setPreferredSize(new Dimension(250, 25));
+        mealComboBox.setPreferredSize(new Dimension(250, DesignConstants.COMPONENT_HEIGHT));
+        mealComboBox.setFont(componentFont);
+        mealComboBox.setForeground(textColor);
         mealComboBox.addActionListener(this);
         formPanel.add(mealComboBox, gbc);
 
         gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
         loadMealsButton = new JButton("Load Meals");
+        customizeButton(loadMealsButton);
         loadMealsButton.addActionListener(this);
         formPanel.add(loadMealsButton, gbc);
+        row++;
 
-        // Meal filter information
-        gbc.gridx = 1; gbc.gridy = 6;
+        gbc.gridx = 1; gbc.gridy = row;
+        gbc.gridwidth = 2;
         mealFilterLabel = new JLabel("(Meals filtered by customer preference)");
-        mealFilterLabel.setFont(mealFilterLabel.getFont().deriveFont(Font.ITALIC, 10f));
-        mealFilterLabel.setForeground(Color.GRAY);
+        mealFilterLabel.setFont(DesignConstants.SMALL_ITALIC_FONT);
+        mealFilterLabel.setForeground(DesignConstants.TEXT_MUTED);
         formPanel.add(mealFilterLabel, gbc);
+        gbc.gridwidth = 1;
+        row++;
 
-        // Price display section
         JPanel pricePanel = new JPanel(new GridBagLayout());
-        pricePanel.setBorder(BorderFactory.createTitledBorder("Price Breakdown"));
+        pricePanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
+        pricePanel.setBorder(BorderFactory.createTitledBorder(
+            DesignConstants.TITLED_BORDER_STYLE,
+            "Price Breakdown",
+            javax.swing.border.TitledBorder.LEFT,
+            javax.swing.border.TitledBorder.TOP,
+            DesignConstants.TABLE_HEADER_FONT,
+            DesignConstants.TEXT_DARK
+        ));
+
+        Font priceLabelFont = DesignConstants.BUTTON_FONT;
+        Color priceColor = DesignConstants.TEXT_HIGHLIGHT;
 
         gbc.gridx = 0; gbc.gridy = 0;
-        pricePanel.add(new JLabel("Outbound Flight Price:"), gbc);
+        JLabel outboundPriceTitle = new JLabel("Outbound Flight Price:");
+        outboundPriceTitle.setFont(labelFont);
+        outboundPriceTitle.setForeground(textColor);
+        pricePanel.add(outboundPriceTitle, gbc);
         gbc.gridx = 1;
         outboundPriceLabel = new JLabel("£0.00");
+        outboundPriceLabel.setFont(priceLabelFont);
+        outboundPriceLabel.setForeground(priceColor);
         pricePanel.add(outboundPriceLabel, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
-        pricePanel.add(new JLabel("Return Flight Price:"), gbc);
+        JLabel returnPriceTitle = new JLabel("Return Flight Price:");
+        returnPriceTitle.setFont(labelFont);
+        returnPriceTitle.setForeground(textColor);
+        pricePanel.add(returnPriceTitle, gbc);
         gbc.gridx = 1;
         returnPriceLabel = new JLabel("£0.00");
+        returnPriceLabel.setFont(priceLabelFont);
+        returnPriceLabel.setForeground(priceColor);
         pricePanel.add(returnPriceLabel, gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
-        pricePanel.add(new JLabel("Meal Price:"), gbc);
+        JLabel mealPriceTitle = new JLabel("Meal Price:");
+        mealPriceTitle.setFont(labelFont);
+        mealPriceTitle.setForeground(textColor);
+        pricePanel.add(mealPriceTitle, gbc);
         gbc.gridx = 1;
         mealPriceLabel = new JLabel("£0.00");
+        mealPriceLabel.setFont(priceLabelFont);
+        mealPriceLabel.setForeground(priceColor);
         pricePanel.add(mealPriceLabel, gbc);
 
         gbc.gridx = 0; gbc.gridy = 3;
         JLabel totalLabel = new JLabel("Total Price:");
-        totalLabel.setFont(totalLabel.getFont().deriveFont(Font.BOLD));
+        totalLabel.setFont(DesignConstants.BOLD_PRICE_FONT);
+        totalLabel.setForeground(DesignConstants.TEXT_DARK);
         pricePanel.add(totalLabel, gbc);
         gbc.gridx = 1;
         totalPriceLabel = new JLabel("£0.00");
-        totalPriceLabel.setFont(totalPriceLabel.getFont().deriveFont(Font.BOLD));
+        totalPriceLabel.setFont(DesignConstants.BOLD_PRICE_FONT);
+        totalPriceLabel.setForeground(DesignConstants.ACCENT_COLOR);
         pricePanel.add(totalPriceLabel, gbc);
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP));
+        buttonPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, DesignConstants.BUTTON_PANEL_BOTTOM_PADDING, 0));
+
         calculatePriceButton = new JButton("Calculate Price");
-        calculatePriceButton.addActionListener(this);
-
         issueBookingButton = new JButton("Issue Booking");
-        issueBookingButton.addActionListener(this);
-
         cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(this);
+
+        customizeButton(calculatePriceButton);
+        customizeButton(issueBookingButton);
+        customizeButton(cancelButton);
 
         buttonPanel.add(calculatePriceButton);
         buttonPanel.add(issueBookingButton);
         buttonPanel.add(cancelButton);
 
-        // Add panels to main panel
-        mainPanel.add(formPanel, BorderLayout.CENTER);
-        mainPanel.add(pricePanel, BorderLayout.SOUTH);
+        mainPanel.add(formPanel, BorderLayout.NORTH);
+        mainPanel.add(pricePanel, BorderLayout.CENTER);
 
-        // Add main panel and button panel to frame
         add(mainPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Initial load
         loadCustomers();
         loadFlights();
 
         setVisible(true);
+    }
+
+    private void customizeButton(JButton button) {
+        button.setBackground(DesignConstants.BUTTON_BLUE);
+        button.setForeground(DesignConstants.BUTTON_TEXT_COLOR);
+        button.setFont(DesignConstants.BUTTON_FONT);
+        button.setFocusPainted(false);
+        button.setBorder(DesignConstants.BUTTON_PADDING_BORDER);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(DesignConstants.BUTTON_HOVER_BLUE);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(DesignConstants.BUTTON_BLUE);
+            }
+        });
     }
 
     @Override
@@ -220,13 +305,13 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
         } else if (e.getSource() == loadMealsButton || e.getSource() == customerComboBox) {
             loadMeals();
         } else if (e.getSource() == returnFlightCheckBox) {
-            FlightreturnFlightComboBox.setEnabled(returnFlightCheckBox.isSelected());
+            returnFlightComboBox.setEnabled(returnFlightCheckBox.isSelected());
             if (!returnFlightCheckBox.isSelected()) {
-                FlightreturnFlightComboBox.setSelectedIndex(-1);
+                returnFlightComboBox.setSelectedIndex(-1);
             }
             calculatePrice();
         } else if (e.getSource() == outboundFlightComboBox ||
-                   e.getSource() == FlightreturnFlightComboBox ||
+                   e.getSource() == returnFlightComboBox ||
                    e.getSource() == classComboBox ||
                    e.getSource() == mealComboBox) {
             calculatePrice();
@@ -242,7 +327,7 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
     private void loadCustomers() {
         try {
             customerComboBox.removeAllItems();
-            customerComboBox.addItem(null); // Add null option for "Select Customer"
+            customerComboBox.addItem(null);
 
             for (Customer customer : fbs.getCustomers()) {
                 if (!customer.isDeleted()) {
@@ -263,15 +348,15 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
     private void loadFlights() {
         try {
             outboundFlightComboBox.removeAllItems();
-            FlightreturnFlightComboBox.removeAllItems();
+            returnFlightComboBox.removeAllItems();
 
-            outboundFlightComboBox.addItem(null); // Add null option
-            FlightreturnFlightComboBox.addItem(null); // Add null option
+            outboundFlightComboBox.addItem(null);
+            returnFlightComboBox.addItem(null);
 
             for (Flight flight : fbs.getFlights()) {
                 if (!flight.isDeleted() && flight.hasAnySeatsLeft()) {
                     outboundFlightComboBox.addItem(flight);
-                    FlightreturnFlightComboBox.addItem(flight);
+                    returnFlightComboBox.addItem(flight);
                 }
             }
 
@@ -284,7 +369,7 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
     private void loadMeals() {
         try {
             mealComboBox.removeAllItems();
-            mealComboBox.addItem(null); // Add null option for "No Meal"
+            mealComboBox.addItem(null);
 
             Customer selectedCustomer = (Customer) customerComboBox.getSelectedItem();
             if (selectedCustomer != null) {
@@ -320,7 +405,7 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
             }
 
             if (returnFlightCheckBox.isSelected()) {
-                Flight returnFlight = (Flight) FlightreturnFlightComboBox.getSelectedItem();
+                Flight returnFlight = (Flight) returnFlightComboBox.getSelectedItem();
                 if (returnFlight != null && selectedClass != null) {
                     returnPrice = returnFlight.getDynamicPrice(selectedClass, fbs.getSystemDate());
                 }
@@ -341,12 +426,15 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error calculating price: " + e.getMessage(),
                                         "Error", JOptionPane.ERROR_MESSAGE);
+            outboundPriceLabel.setText("£0.00");
+            returnPriceLabel.setText("£0.00");
+            mealPriceLabel.setText("£0.00");
+            totalPriceLabel.setText("£0.00");
         }
     }
 
     private void issueBooking() {
         try {
-            // Validate selections
             Customer customer = (Customer) customerComboBox.getSelectedItem();
             if (customer == null) {
                 JOptionPane.showMessageDialog(this, "Please select a customer.", "Validation Error",
@@ -370,9 +458,19 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
 
             Flight returnFlight = null;
             if (returnFlightCheckBox.isSelected()) {
-                returnFlight = (Flight) FlightreturnFlightComboBox.getSelectedItem();
+                returnFlight = (Flight) returnFlightComboBox.getSelectedItem();
                 if (returnFlight == null) {
                     JOptionPane.showMessageDialog(this, "Please select a return flight or uncheck return flight option.",
+                            "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (outboundFlight.equals(returnFlight)) {
+                    JOptionPane.showMessageDialog(this, "Outbound and return flights cannot be the same.",
+                            "Validation Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (returnFlight.getDepartureDate().isBefore(outboundFlight.getDepartureDate())) {
+                    JOptionPane.showMessageDialog(this, "Return flight must depart on or after the outbound flight.",
                             "Validation Error", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
@@ -380,39 +478,26 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
 
             Meal selectedMeal = (Meal) mealComboBox.getSelectedItem();
 
-            // Validate class availability and seat capacity
+            // Corrected: Reverted to isClassAvailable() as per original request
             if (!outboundFlight.isClassAvailable(selectedClass)) {
                 JOptionPane.showMessageDialog(this, "Selected class is not available on outbound flight.",
                         "Booking Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (!outboundFlight.isClassAvailable(selectedClass)) {
-                JOptionPane.showMessageDialog(this, "No seats available on outbound flight for selected class.",
-                        "Booking Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
 
             if (returnFlight != null) {
+                // Corrected: Reverted to isClassAvailable() as per original request
                 if (!returnFlight.isClassAvailable(selectedClass)) {
                     JOptionPane.showMessageDialog(this, "Selected class is not available on return flight.",
                             "Booking Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                if (!returnFlight.isClassAvailable(selectedClass)) {
-                    JOptionPane.showMessageDialog(this, "No seats available on return flight for selected class.",
-                            "Booking Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
             }
 
-            // Issue the booking
             fbs.addBooking(customer, outboundFlight, returnFlight, selectedClass, selectedMeal);
-
-            // --- FIX START ---
-            // Call the static store method from FlightBookingSystemData
+            
             FlightBookingSystemData.store(mw.getFlightBookingSystem());
-            // --- FIX END ---
-
+            
             JOptionPane.showMessageDialog(this, "Booking successfully issued!",
                     "Success", JOptionPane.INFORMATION_MESSAGE);
             mw.refreshCurrentView();
@@ -424,10 +509,10 @@ public class IssueBookingWindow extends JFrame implements ActionListener {
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Error saving data: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ex) { // Catch any other unexpected exceptions
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "An unexpected error occurred: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace(); // Print full stack trace for debugging
+            ex.printStackTrace();
         }
     }
 }

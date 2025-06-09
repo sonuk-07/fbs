@@ -3,7 +3,7 @@ package bcu.cmp5332.bookingsystem.data;
 import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.FlightBookingSystem;
 import bcu.cmp5332.bookingsystem.model.Meal;
-import bcu.cmp5332.bookingsystem.model.MealType; // NEW: Import MealType
+import bcu.cmp5332.bookingsystem.model.MealType;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -23,11 +23,8 @@ public class MealDataManager implements DataManager {
             int line_idx = 1;
             while (sc.hasNextLine()) {
                 String line = sc.nextLine();
-                String[] properties = line.split(SEPARATOR, -1); // Use -1 to keep trailing empty strings
+                String[] properties = line.split(SEPARATOR, -1);
 
-                // Expected fields: id, name, description, price, type, isDeleted
-                // Total 6 fields.
-                // We need at least 5 fields to parse id, name, description, price, and type.
                 if (properties.length < 5) {
                     throw new FlightBookingSystemException("Malformed meal line at " + line_idx + ": " + line + " (Too few fields for basic meal properties)");
                 }
@@ -37,26 +34,22 @@ public class MealDataManager implements DataManager {
                     String name = properties[1].trim();
                     String description = properties[2].trim();
                     BigDecimal price = new BigDecimal(properties[3].trim());
-                    // NEW: Parse MealType
-                    MealType type = MealType.valueOf(properties[4].trim().toUpperCase()); // This is where the error occurs
+                    MealType type = MealType.valueOf(properties[4].trim().toUpperCase());
 
                     boolean isDeleted = false;
-                    // Check if isDeleted property exists (now at index 5)
                     if (properties.length > 5) {
                         isDeleted = Boolean.parseBoolean(properties[5].trim());
                     }
 
-                    // UPDATED Meal CONSTRUCTOR CALL
                     Meal meal = new Meal(id, name, description, price, type);
                     meal.setDeleted(isDeleted);
                     fbs.addMeal(meal);
 
                 } catch (NumberFormatException ex) {
                     throw new FlightBookingSystemException("Unable to parse meal ID/price on line " + line_idx + ": " + ex.getMessage(), ex);
-                } catch (IllegalArgumentException ex) { // Catch for Enum.valueOf (e.g., "FALSE" for MealType)
+                } catch (IllegalArgumentException ex) {
                     throw new FlightBookingSystemException("Invalid meal type on line " + line_idx + ": " + ex.getMessage(), ex);
                 } catch (ArrayIndexOutOfBoundsException ex) {
-                    // This can happen if a line has fewer than the expected number of properties
                     throw new FlightBookingSystemException("Malformed line at index " + line_idx + " in meal data (missing fields): " + line, ex);
                 }
                 line_idx++;
@@ -72,7 +65,7 @@ public class MealDataManager implements DataManager {
                 out.print(meal.getName() + SEPARATOR);
                 out.print(meal.getDescription() + SEPARATOR);
                 out.print(meal.getPrice().toPlainString() + SEPARATOR);
-                out.print(meal.getType().name() + SEPARATOR); // NEW: Store meal type as its enum name
+                out.print(meal.getType().name() + SEPARATOR);
                 out.print(meal.isDeleted());
                 out.println();
             }

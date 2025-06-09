@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 
 public class Booking {
 
-	private int id; // ADDED: Unique identifier for the booking
+	private int id;
 	private Customer customer;
 	private Flight outboundFlight;
 	private Flight returnFlight;
@@ -23,7 +23,7 @@ public class Booking {
 	private BigDecimal cancellationFee;
 	private BigDecimal rebookFee;
 	private Meal meal;
-	private boolean isCancelled; // ADDED: Flag to indicate if the booking is cancelled
+	private boolean isCancelled;
 
 	/**
 	 * Constructs a new Booking object with comprehensive details. This is the
@@ -31,26 +31,26 @@ public class Booking {
 	 * round-trip bookings, along with meal selection.
 	 *
 	 * @param id The unique identifier for this booking.
-	 * @param customer            The {@link Customer} who made this booking.
-	 * @param outboundFlight      The {@link Flight} for the outbound journey.
-	 *                            Cannot be null.
-	 * @param returnFlight        The {@link Flight} for the return journey. Can be
-	 *                            null for one-way bookings.
-	 * @param bookingDate         The {@link LocalDate} when the booking was made.
-	 * @param bookedClass         The {@link CommercialClassType} chosen for this
-	 *                            booking.
+	 * @param customer The {@link Customer} who made this booking.
+	 * @param outboundFlight The {@link Flight} for the outbound journey.
+	 * Cannot be null.
+	 * @param returnFlight The {@link Flight} for the return journey. Can be
+	 * null for one-way bookings.
+	 * @param bookingDate The {@link LocalDate} when the booking was made.
+	 * @param bookedClass The {@link CommercialClassType} chosen for this
+	 * booking.
 	 * @param bookedPriceOutbound The price of the outbound flight at the time of
-	 *                            booking.
-	 * @param bookedPriceReturn   The price of the return flight at the time of
-	 *                            booking. Is {@link BigDecimal#ZERO} if no return
-	 *                            flight.
-	 * @param meal                The {@link Meal} selected for this booking. Can be
-	 *                            null if no meal is chosen.
+	 * booking.
+	 * @param bookedPriceReturn The price of the return flight at the time of
+	 * booking. Is {@link BigDecimal#ZERO} if no return
+	 * flight.
+	 * @param meal The {@link Meal} selected for this booking. Can be
+	 * null if no meal is chosen.
 	 */
 
 	public Booking(int id, Customer customer, Flight outboundFlight, Flight returnFlight, LocalDate bookingDate,
 			CommercialClassType bookedClass, BigDecimal bookedPriceOutbound, BigDecimal bookedPriceReturn, Meal meal) {
-		this.id = id; // Set the ID
+		this.id = id;
 		this.customer = customer;
 		this.outboundFlight = outboundFlight;
 		this.returnFlight = returnFlight;
@@ -61,7 +61,7 @@ public class Booking {
 		this.cancellationFee = BigDecimal.ZERO;
 		this.rebookFee = BigDecimal.ZERO;
 		this.meal = meal;
-		this.isCancelled = false; // Initialize as not cancelled
+		this.isCancelled = false;
 	}
 
 	/**
@@ -71,9 +71,9 @@ public class Booking {
 	 * and meal can be set later if needed.
 	 *
 	 * @param id The unique identifier for this booking.
-	 * @param customer    The {@link Customer} who made this booking.
-	 * @param flight      The {@link Flight} for the journey (assumed to be
-	 *                    outbound).
+	 * @param customer The {@link Customer} who made this booking.
+	 * @param flight The {@link Flight} for the journey (assumed to be
+	 * outbound).
 	 * @param bookingDate The {@link LocalDate} when the booking was made.
 	 * @param bookedClass The {@link CommercialClassType} chosen for this booking.
 	 */
@@ -92,7 +92,7 @@ public class Booking {
 
 	/**
 	 * Gets the customer associated with this booking.
-	 * 
+	 *
 	 * @return The {@link Customer} object.
 	 */
 
@@ -186,11 +186,10 @@ public class Booking {
  	 * @return A {@link String} containing a concise summary of the booking.
  	 */
 
-	// UPDATED getDetailsShort()
 	public String getDetailsShort() {
 		String mealInfo = (meal != null) ? ", Meal: " + meal.getName() + " (" + meal.getType().getDisplayName() + ")"
 				: "";
-		String status = isCancelled ? " (CANCELLED)" : ""; // Add status
+		String status = isCancelled ? " (CANCELLED)" : "";
 		return "Booking ID: " + id + status + " - Outbound " + outboundFlight.getFlightNumber() + ", Return "
 				+ (returnFlight != null ? returnFlight.getFlightNumber() : "N/A") + " - Class: "
 				+ bookedClass.getClassName() + mealInfo + " - Total Price: £" + getTotalBookingPrice();
@@ -204,13 +203,11 @@ public class Booking {
  	 * @return A {@link String} containing detailed information about the booking.
  	 */
 
-
-	// UPDATED getDetailsLong()
 	public String getDetailsLong() {
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 		StringBuilder sb = new StringBuilder();
-		sb.append("Booking ID: ").append(id).append("\n"); // Add booking ID
-		sb.append("Status: ").append(isCancelled ? "CANCELLED" : "ACTIVE").append("\n"); // Add status
+		sb.append("Booking ID: ").append(id).append("\n");
+		sb.append("Status: ").append(isCancelled ? "CANCELLED" : "ACTIVE").append("\n");
 		sb.append("Customer: ").append(customer.getDetailsShort()).append("\nOutbound Flight: ")
 				.append(outboundFlight.getDetailsShort()).append("\n  Booked Class: ")
 				.append(bookedClass.getClassName()).append("\n  Booked Price: £").append(bookedPriceOutbound);
@@ -221,9 +218,7 @@ public class Booking {
 		}
 
 		if (meal != null) {
-			sb.append("\nMeal: ").append(meal.getName()).append(" (Type: ").append(meal.getType().getDisplayName()) // Display
-																													// meal
-																													// type
+			sb.append("\nMeal: ").append(meal.getName()).append(" (Type: ").append(meal.getType().getDisplayName())
 					.append(", Price: £").append(meal.getPrice()).append(")");
 		} else {
 			sb.append("\nMeal: None");

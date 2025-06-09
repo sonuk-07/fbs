@@ -8,6 +8,7 @@ import bcu.cmp5332.bookingsystem.model.FlightType;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,7 +33,7 @@ public class ViewFlightWindow implements ActionListener {
     
     private MainWindow mainWindow;
     private FlightBookingSystem fbs;
-    private JPanel panel;
+    private JPanel mainPanel;
     
     private JTable flightsTable;
     private DefaultTableModel flightsTableModel;
@@ -42,7 +43,6 @@ public class ViewFlightWindow implements ActionListener {
     private JMenuItem removeFlightMenuItem;
     
     private boolean showAllFlights = false;
-    private boolean isVisible = false;
 
     public ViewFlightWindow(MainWindow mainWindow, FlightBookingSystem fbs) {
         this.mainWindow = mainWindow;
@@ -51,7 +51,19 @@ public class ViewFlightWindow implements ActionListener {
     }
     
     private void initializeComponents() {
-        panel = new JPanel(new BorderLayout());
+        mainPanel = new JPanel(new BorderLayout(DesignConstants.MAIN_PANEL_H_GAP, DesignConstants.MAIN_PANEL_V_GAP));
+        mainPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
+        mainPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
+
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        headerPanel.setBackground(DesignConstants.PRIMARY_BLUE);
+        headerPanel.setBorder(DesignConstants.HEADER_PANEL_BORDER);
+        
+        titleLabel = new JLabel("All Flights");
+        titleLabel.setFont(DesignConstants.HEADER_FONT);
+        titleLabel.setForeground(Color.WHITE);
+        headerPanel.add(titleLabel);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
         
         String[] columns = new String[]{
             "ID", "Flight No", "Origin", "Destination", "Date", "Type", "Economy Price (£)", "Total Capacity", "Status"
@@ -68,26 +80,27 @@ public class ViewFlightWindow implements ActionListener {
         setupTable();
         setupPopupMenu();
         
-        titleLabel = new JLabel();
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        
-        panel.add(titleLabel, BorderLayout.NORTH);
-        panel.add(new JScrollPane(flightsTable), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(flightsTable);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setBorder(DesignConstants.SCROLL_PANE_BORDER);
+
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
     }
     
     private void setupTable() {
-        flightsTable.setRowHeight(30);
-        flightsTable.setShowGrid(true);
-        flightsTable.setGridColor(new Color(220, 220, 220));
-        flightsTable.setSelectionBackground(new Color(230, 240, 255));
-        flightsTable.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        flightsTable.setFont(DesignConstants.TABLE_ROW_FONT);
+        flightsTable.getTableHeader().setFont(DesignConstants.TABLE_HEADER_FONT);
+        flightsTable.setRowHeight(DesignConstants.TABLE_ROW_HEIGHT);
+        flightsTable.setFillsViewportHeight(true);
         
-        flightsTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
-        flightsTable.getTableHeader().setBackground(new Color(245, 245, 250));
-        flightsTable.getTableHeader().setForeground(new Color(60, 60, 60));
+        flightsTable.setShowGrid(true);
+        flightsTable.setGridColor(DesignConstants.TABLE_GRID_COLOR);
+        flightsTable.setSelectionBackground(DesignConstants.TABLE_SELECTION_BACKGROUND);
+        
+        flightsTable.getTableHeader().setBackground(DesignConstants.PRIMARY_BLUE.brighter());
+        flightsTable.getTableHeader().setForeground(DesignConstants.TEXT_DARK);
         flightsTable.getTableHeader().setReorderingAllowed(false);
         
-        // Set column widths
         flightsTable.getColumnModel().getColumn(0).setPreferredWidth(40);
         flightsTable.getColumnModel().getColumn(1).setPreferredWidth(70);
         flightsTable.getColumnModel().getColumn(2).setPreferredWidth(100);
@@ -98,7 +111,6 @@ public class ViewFlightWindow implements ActionListener {
         flightsTable.getColumnModel().getColumn(7).setPreferredWidth(80);
         flightsTable.getColumnModel().getColumn(8).setPreferredWidth(70);
         
-        // Center align specific columns
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         flightsTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
@@ -137,14 +149,20 @@ public class ViewFlightWindow implements ActionListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && flightsTable.getSelectedRow() != -1) {
-                    viewSelectedFlightDetails();
+                    if (flightsTableModel.getRowCount() > 0 && flightsTableModel.getValueAt(flightsTable.getSelectedRow(), 0) instanceof Integer) {
+                        viewSelectedFlightDetails();
+                    }
                 }
             }
 
             private void showFlightPopup(MouseEvent e) {
                 if (e.isPopupTrigger() && flightsTable.getSelectedRow() != -1) {
-                    String currentStatus = (String) flightsTableModel.getValueAt(flightsTable.getSelectedRow(), 8);
-                    removeFlightMenuItem.setEnabled("Active".equals(currentStatus));
+                    if (flightsTableModel.getRowCount() > 0 && !(flightsTableModel.getValueAt(flightsTable.getSelectedRow(), 0) instanceof Integer)) {
+                        removeFlightMenuItem.setEnabled(false);
+                    } else {
+                        String currentStatus = (String) flightsTableModel.getValueAt(flightsTable.getSelectedRow(), 8);
+                        removeFlightMenuItem.setEnabled("Active".equals(currentStatus));
+                    }
                     flightPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -153,8 +171,9 @@ public class ViewFlightWindow implements ActionListener {
     
     public void displayFlights(boolean showAll) {
         this.showAllFlights = showAll;
-        this.isVisible = true;
         
+        flightsTableModel.setRowCount(0);
+
         List<Flight> flightsList;
         String tableTitle;
 
@@ -166,7 +185,18 @@ public class ViewFlightWindow implements ActionListener {
             tableTitle = "Active Future Flights";
         }
         
-        flightsTableModel.setRowCount(0);
+        if (flightsList.isEmpty()) {
+            flightsTable.setFont(DesignConstants.TABLE_EMPTY_MESSAGE_FONT);
+            flightsTable.setForeground(DesignConstants.TEXT_DARK.darker());
+            flightsTable.clearSelection();
+            flightsTableModel.addRow(new Object[]{"", "", "", "No flights to display.", "", "", "", "", ""});
+            titleLabel.setText(tableTitle);
+            return;
+        }
+        
+        flightsTable.setFont(DesignConstants.TABLE_ROW_FONT);
+        flightsTable.setForeground(DesignConstants.TEXT_DARK);
+
         LocalDate today = LocalDate.now();
 
         for (Flight flight : flightsList) {
@@ -212,6 +242,11 @@ public class ViewFlightWindow implements ActionListener {
             return;
         }
 
+        if (flightsTableModel.getRowCount() > 0 && !(flightsTableModel.getValueAt(selectedRow, 0) instanceof Integer)) {
+            JOptionPane.showMessageDialog(mainWindow, "No flight details to display for this row.", "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         int flightId = (int) flightsTableModel.getValueAt(selectedRow, 0);
         try {
             Flight selectedFlight = fbs.getFlightByIDIncludingDeleted(flightId);
@@ -222,6 +257,7 @@ public class ViewFlightWindow implements ActionListener {
             new FlightDetailsWindow(mainWindow, selectedFlight);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(mainWindow, "Error viewing flight details: " + ex.getMessage(), "Flight Details Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
     
@@ -232,6 +268,11 @@ public class ViewFlightWindow implements ActionListener {
             return;
         }
         
+        if (flightsTableModel.getRowCount() > 0 && !(flightsTableModel.getValueAt(selectedRow, 0) instanceof Integer)) {
+            JOptionPane.showMessageDialog(mainWindow, "Cannot remove 'No flights to display.' row.", "Invalid Selection", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         String status = (String) flightsTableModel.getValueAt(selectedRow, 8);
         if (status.equals("Removed")) {
             JOptionPane.showMessageDialog(mainWindow, "This flight has already been removed.", "Already Removed", JOptionPane.INFORMATION_MESSAGE);
@@ -272,25 +313,34 @@ public class ViewFlightWindow implements ActionListener {
                 JOptionPane.showMessageDialog(mainWindow, "Error removing flight: " + ex.getMessage(), "Removal Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(mainWindow, "An unexpected error occurred during removal: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
     }
     
     public JPanel getPanel() {
-        return panel;
+        return mainPanel;
     }
     
     public boolean isVisible() {
-        return isVisible;
+        return mainPanel != null && mainPanel.isShowing();
     }
     
     public void refreshView() {
-        if (isVisible) {
-            displayFlights(showAllFlights);
-        }
+        displayFlights(showAllFlights);
     }
     
     public void cleanup() {
-        isVisible = false;
+        if (mainPanel != null) {
+            mainPanel.removeAll();
+            mainPanel.revalidate();
+            mainPanel.repaint();
+        }
+        mainPanel = null;
+        flightsTable = null;
+        flightsTableModel = null;
+        fbs = null;
+        mainWindow = null;
+        System.out.println("ViewFlightWindow cleaned up.");
     }
 }

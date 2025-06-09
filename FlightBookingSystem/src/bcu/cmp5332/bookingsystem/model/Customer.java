@@ -19,7 +19,7 @@ public class Customer {
     private String email;
     private int age;
     private String gender;
-    private MealType preferredMealType; // NEW FIELD: Customer's preferred meal type
+    private MealType preferredMealType; 
     private boolean isDeleted;
     private final List<Booking> bookings = new ArrayList<>();
 
@@ -45,7 +45,7 @@ public class Customer {
         this.email = email;
         this.age = age;
         this.gender = gender;
-        this.preferredMealType = preferredMealType; // Initialize new field
+        this.preferredMealType = preferredMealType; 
         this.isDeleted = false;
     }
 
@@ -103,8 +103,6 @@ public class Customer {
      * @param preferredMealType The new preferred meal type.
      */
     
-
-    // NEW GETTER AND SETTER for Preferred Meal Type
     public MealType getPreferredMealType() {
         return preferredMealType;
     }
@@ -136,10 +134,8 @@ public class Customer {
      *
      * @return A short string containing the customer's ID, name, phone, email, age, gender, and preferred meal type.
      */
-    
-    // UPDATED getDetailsShort()
+
     public String getDetailsShort() {
-        // Example: 1: Alice Wonderland (111222333, alice@example.com, 30, Female, Pref: Vegetarian)
         return id + ": " + name + " (" + phone + ", " + email + ", " + age + ", " + gender + ", Pref: " + preferredMealType.getDisplayName() + ")";
     }
 
@@ -152,7 +148,6 @@ public class Customer {
      */
     
     
-    // UPDATED getDetailsLong()
     public String getDetailsLong() {
         StringBuilder sb = new StringBuilder();
         sb.append("Customer ID: ").append(id)

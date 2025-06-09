@@ -11,7 +11,7 @@ public enum MealType {
     NON_VEG("Non-Vegetarian"),
     VEGAN("Vegan"),
     GLUTEN_FREE("Gluten-Free"),
-    NONE("None"); // This value is correctly here
+    NONE("None"); 
 
     private final String displayName;
 

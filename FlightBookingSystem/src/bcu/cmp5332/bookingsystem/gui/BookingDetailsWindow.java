@@ -7,43 +7,25 @@ import bcu.cmp5332.bookingsystem.model.Flight;
 import bcu.cmp5332.bookingsystem.model.Meal;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.format.DateTimeFormatter;
 
 public class BookingDetailsWindow extends JFrame implements ActionListener {
 
     private MainWindow mw;
     private FlightBookingSystem fbs;
-    private Booking booking; // The specific booking to display
+    private Booking booking;
 
-    // ... (rest of the JLabel declarations remain the same) ...
-    private JLabel idLabel;
-    private JLabel customerLabel;
-    private JLabel outboundFlightLabel;
-    private JLabel returnFlightLabel;
-    private JLabel bookedClassLabel;
-    private JLabel mealLabel;
-    private JLabel bookingDateLabel;
-    private JLabel bookedPriceOutboundLabel;
-    private JLabel bookedPriceReturnLabel;
-    private JLabel cancellationFeeLabel;
-    private JLabel rebookFeeLabel;
-    private JLabel totalBookingPriceLabel;
     private JLabel statusLabel;
 
     private JButton editBookingButton;
     private JButton cancelBookingButton;
-    private JButton rebookBookingButton; // NEW: Declare the rebook button
+    private JButton rebookBookingButton;
     private JButton backButton;
-
-    private static final Color PRIMARY_BLUE = new Color(34, 107, 172);
-    private static final Color LIGHT_GRAY_BG = new Color(245, 245, 245);
-    private static final Color TEXT_DARK = new Color(44, 62, 80);
-    private static final Color ACCENT_GREEN = new Color(46, 204, 113);
-    private static final Color ACCENT_RED = new Color(231, 76, 60);
 
     public BookingDetailsWindow(MainWindow mw, Booking booking) {
         this.mw = mw;
@@ -59,28 +41,25 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
         setLocationRelativeTo(mw);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(LIGHT_GRAY_BG);
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JPanel mainPanel = new JPanel(new BorderLayout(DesignConstants.MAIN_PANEL_H_GAP, DesignConstants.MAIN_PANEL_V_GAP));
+        mainPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
+        mainPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
         
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        headerPanel.setBackground(PRIMARY_BLUE);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        headerPanel.setBackground(DesignConstants.PRIMARY_BLUE);
+        headerPanel.setBorder(DesignConstants.HEADER_PANEL_BORDER);
         JLabel titleLabel = new JLabel("Booking Details");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titleLabel.setFont(DesignConstants.DETAILS_TITLE_FONT);
         titleLabel.setForeground(Color.WHITE);
         headerPanel.add(titleLabel);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
         JPanel detailsPanel = new JPanel(new GridBagLayout());
         detailsPanel.setBackground(Color.WHITE);
-        detailsPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(PRIMARY_BLUE.darker(), 1),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
+        detailsPanel.setBorder(DesignConstants.DETAILS_PANEL_COMPOUND_BORDER);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(DesignConstants.DETAILS_INSET_GAP, DesignConstants.DETAILS_INSET_GAP, DesignConstants.DETAILS_INSET_GAP, DesignConstants.DETAILS_INSET_GAP);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
@@ -128,51 +107,33 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
         detailsPanel.add(createLabel("Status:", true), gbc);
         gbc.gridx = 1;
         statusLabel = createLabel(booking.isCancelled() ? "Cancelled" : "Active", false);
-        statusLabel.setForeground(booking.isCancelled() ? ACCENT_RED : ACCENT_GREEN);
-        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        statusLabel.setForeground(booking.isCancelled() ? DesignConstants.STATUS_CANCELLED_RED : DesignConstants.STATUS_ACTIVE_GREEN);
+        statusLabel.setFont(DesignConstants.STATUS_FONT);
         detailsPanel.add(statusLabel, gbc);
-
 
         mainPanel.add(detailsPanel, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonPanel.setBackground(LIGHT_GRAY_BG);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP));
+        buttonPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
 
         editBookingButton = new JButton("Edit Booking");
-        editBookingButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        editBookingButton.setBackground(PRIMARY_BLUE);
-        editBookingButton.setForeground(Color.WHITE);
-        editBookingButton.setFocusPainted(false);
-        editBookingButton.addActionListener(this);
+        customizeButton(editBookingButton, DesignConstants.BUTTON_BLUE, DesignConstants.BUTTON_HOVER_BLUE, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
         editBookingButton.setEnabled(!booking.isCancelled()); 
 
         cancelBookingButton = new JButton("Cancel Booking");
-        cancelBookingButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        cancelBookingButton.setBackground(ACCENT_RED);
-        cancelBookingButton.setForeground(Color.WHITE);
-        cancelBookingButton.setFocusPainted(false);
-        cancelBookingButton.addActionListener(this);
+        customizeButton(cancelBookingButton, DesignConstants.STATUS_CANCELLED_RED, DesignConstants.STATUS_CANCELLED_RED.darker(), DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
         cancelBookingButton.setEnabled(!booking.isCancelled());
 
-        // NEW: Rebook Booking Button
         rebookBookingButton = new JButton("Rebook Booking");
-        rebookBookingButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        rebookBookingButton.setBackground(new Color(255, 165, 0)); // Orange color for Rebook
-        rebookBookingButton.setForeground(Color.WHITE);
-        rebookBookingButton.setFocusPainted(false);
-        rebookBookingButton.addActionListener(this);
-        rebookBookingButton.setEnabled(!booking.isCancelled()); // Enable only if not cancelled
+        customizeButton(rebookBookingButton, DesignConstants.REBOOK_BUTTON_ORANGE, DesignConstants.REBOOK_BUTTON_HOVER_ORANGE, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
+        rebookBookingButton.setEnabled(!booking.isCancelled());
 
         backButton = new JButton("Back to Bookings");
-        backButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        backButton.setBackground(Color.LIGHT_GRAY);
-        backButton.setForeground(TEXT_DARK);
-        backButton.setFocusPainted(false);
-        backButton.addActionListener(this);
+        customizeButton(backButton, Color.LIGHT_GRAY, Color.GRAY, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.TEXT_DARK);
 
         buttonPanel.add(editBookingButton);
         buttonPanel.add(cancelBookingButton);
-        buttonPanel.add(rebookBookingButton); // NEW: Add the rebook button to the panel
+        buttonPanel.add(rebookBookingButton);
         buttonPanel.add(backButton);
 
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -192,13 +153,33 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
 
     private JLabel createLabel(String text, boolean isBold) {
         JLabel label = new JLabel(text);
-        label.setForeground(TEXT_DARK);
+        label.setForeground(DesignConstants.TEXT_DARK);
         if (isBold) {
-            label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            label.setFont(DesignConstants.DETAILS_LABEL_FONT);
         } else {
-            label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            label.setFont(DesignConstants.DETAILS_VALUE_FONT);
         }
         return label;
+    }
+
+    private void customizeButton(JButton button, Color bgColor, Color hoverColor, javax.swing.border.Border border, Color textColor) {
+        button.setFont(DesignConstants.BUTTON_FONT);
+        button.setBackground(bgColor);
+        button.setForeground(textColor);
+        button.setFocusPainted(false);
+        button.setBorder(border); 
+        button.addActionListener(this);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor);
+            }
+        });
     }
 
     @Override
@@ -209,9 +190,9 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
         } else if (ae.getSource() == cancelBookingButton) {
             new CancelBookingWindow(mw, booking.getCustomer(), booking.getOutboundFlight()); 
             this.dispose();
-        } else if (ae.getSource() == rebookBookingButton) { // NEW: Handle rebook button click
-            new RebookFlightWindow(mw); // Open the RebookFlightWindow
-            this.dispose(); // Close the current details window
+        } else if (ae.getSource() == rebookBookingButton) {
+            new RebookFlightWindow(mw);
+            this.dispose();
         } else if (ae.getSource() == backButton) {
             mw.displayBookings();
             this.dispose();

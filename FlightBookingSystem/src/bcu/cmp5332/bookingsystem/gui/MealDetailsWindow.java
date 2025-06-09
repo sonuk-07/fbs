@@ -8,12 +8,13 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-public class MealDetailsWindow extends JFrame implements ActionListener { // Implement ActionListener for consistency
+public class MealDetailsWindow extends JFrame implements ActionListener {
 
     private final Meal meal;
 
-    // Labels for meal details
     private JLabel idValueLabel = new JLabel();
     private JLabel nameValueLabel = new JLabel();
     private JLabel descriptionValueLabel = new JLabel();
@@ -21,7 +22,7 @@ public class MealDetailsWindow extends JFrame implements ActionListener { // Imp
     private JLabel typeValueLabel = new JLabel();
     private JLabel statusValueLabel = new JLabel();
 
-    private JButton closeBtn = new JButton("Close"); // Add a close button
+    private JButton closeBtn = new JButton("Close");
 
     public MealDetailsWindow(Meal meal) {
         this.meal = meal;
@@ -32,88 +33,104 @@ public class MealDetailsWindow extends JFrame implements ActionListener { // Imp
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            // Handle look and feel exception
             System.err.println("Failed to set LookAndFeel: " + ex);
         }
 
         setTitle("Meal Details: " + meal.getName());
-        setSize(450, 300); // Slightly increased size
+        setSize(450, 300);
         setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Center on screen
+        setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JPanel mainPanel = new JPanel(new BorderLayout(DesignConstants.MAIN_PANEL_H_GAP, DesignConstants.MAIN_PANEL_V_GAP));
+        mainPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER);
 
-        // --- Meal Information Panel ---
-        JPanel infoPanel = new JPanel(new GridBagLayout()); // Using GridBagLayout
+        JPanel infoPanel = new JPanel(new GridBagLayout());
         infoPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Meal Information", TitledBorder.LEFT, TitledBorder.TOP,
-            new Font("SansSerif", Font.BOLD, 14), new Color(50, 50, 150)));
+            DesignConstants.ETCHED_BORDER, "Meal Information", TitledBorder.LEFT, TitledBorder.TOP,
+            DesignConstants.TITLED_BORDER_FONT, DesignConstants.INFO_PANEL_TITLE_COLOR));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 5, 6, 5);
+        gbc.insets = new Insets(DesignConstants.INFO_PANEL_INSET_GAP_V, DesignConstants.INFO_PANEL_INSET_GAP_H, DesignConstants.INFO_PANEL_INSET_GAP_V, DesignConstants.INFO_PANEL_INSET_GAP_H);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
         int row = 0;
-        // ID
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("ID:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("ID:", true), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0; idValueLabel.setText(String.valueOf(meal.getId()));
+        idValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(idValueLabel, gbc);
         row++;
 
-        // Name
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Name:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Name:", true), gbc);
         gbc.gridx = 1; nameValueLabel.setText(meal.getName());
+        nameValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(nameValueLabel, gbc);
         row++;
 
-        // Description
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Description:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Description:", true), gbc);
         gbc.gridx = 1; descriptionValueLabel.setText(meal.getDescription());
+        descriptionValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(descriptionValueLabel, gbc);
         row++;
 
-        // Price
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Price:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Price:", true), gbc);
         gbc.gridx = 1; priceValueLabel.setText("£" + meal.getPrice().toPlainString());
+        priceValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(priceValueLabel, gbc);
         row++;
 
-        // Meal Type
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Meal Type:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Meal Type:", true), gbc);
         gbc.gridx = 1; typeValueLabel.setText(meal.getType().getDisplayName());
+        typeValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(typeValueLabel, gbc);
         row++;
         
-        // Status
-        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(new JLabel("Status:"), gbc);
+        gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Status:", true), gbc);
         gbc.gridx = 1; 
         statusValueLabel.setText(meal.isDeleted() ? "Removed" : "Active");
-        statusValueLabel.setForeground(meal.isDeleted() ? new Color(200, 50, 50) : new Color(50, 150, 50));
-        statusValueLabel.setFont(statusValueLabel.getFont().deriveFont(Font.BOLD, 12f));
+        statusValueLabel.setForeground(meal.isDeleted() ? DesignConstants.STATUS_CANCELLED_RED : DesignConstants.STATUS_ACTIVE_GREEN);
+        statusValueLabel.setFont(DesignConstants.STATUS_FONT);
         infoPanel.add(statusValueLabel, gbc);
 
         mainPanel.add(infoPanel, BorderLayout.CENTER);
 
-        // --- Bottom Panel with Close Button ---
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 12));
-        closeBtn.setBackground(new Color(100, 150, 200));
-        closeBtn.setForeground(Color.WHITE);
-        closeBtn.setFocusPainted(false);
-        closeBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createRaisedBevelBorder(),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP));
+        // Use DesignConstants.BUTTON_TEXT_COLOR for closeBtn
+        customizeButton(closeBtn, DesignConstants.CLOSE_BUTTON_BG, DesignConstants.CLOSE_BUTTON_HOVER, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         bottomPanel.add(closeBtn);
-        closeBtn.addActionListener(this);
 
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         this.getContentPane().add(mainPanel);
         setVisible(true);
+    }
+
+    private JLabel createLabel(String text, boolean isBold) {
+        JLabel label = new JLabel(text);
+        label.setForeground(DesignConstants.TEXT_DARK);
+        label.setFont(isBold ? DesignConstants.INFO_LABEL_FONT.deriveFont(Font.BOLD) : DesignConstants.INFO_LABEL_FONT);
+        return label;
+    }
+
+    private void customizeButton(JButton button, Color bgColor, Color hoverColor, javax.swing.border.Border border, Color textColor) {
+        button.setFont(DesignConstants.BUTTON_FONT);
+        button.setBackground(bgColor);
+        button.setForeground(textColor);
+        button.setFocusPainted(false);
+        button.setBorder(border);
+        button.addActionListener(this);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor);
+            }
+        });
     }
 
     @Override

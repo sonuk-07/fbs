@@ -1,16 +1,15 @@
 package bcu.cmp5332.bookingsystem.gui;
-
-import bcu.cmp5332.bookingsystem.commands.AddFlight;
-import bcu.cmp5332.bookingsystem.commands.Command;
 import bcu.cmp5332.bookingsystem.main.FlightBookingSystemException;
 import bcu.cmp5332.bookingsystem.model.CommercialClassType;
 import bcu.cmp5332.bookingsystem.model.FlightType;
-import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData; // Changed from FlightDataManager for consistency
+import bcu.cmp5332.bookingsystem.data.FlightBookingSystemData;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter; 
+import java.awt.event.MouseEvent; 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,7 +24,7 @@ public class AddFlightWindow extends JFrame implements ActionListener {
     private JTextField flightNoText = new JTextField(15);
     private JTextField originText = new JTextField(15);
     private JTextField destinationText = new JTextField(15);
-    private JTextField depDateText = new JTextField(10); // Shorter for date
+    private JTextField depDateText = new JTextField(10);
     private JTextField economyPriceText = new JTextField(10);
     private JTextField capacityText = new JTextField(10);
     private JComboBox<String> flightTypeComboBox = new JComboBox<>(new String[]{"Budget", "Commercial"});
@@ -41,7 +40,7 @@ public class AddFlightWindow extends JFrame implements ActionListener {
     private JButton addBtn = new JButton("Add Flight");
     private JButton cancelBtn = new JButton("Cancel");
 
-    private JPanel contentPanel; // <--- FIX: Declare contentPanel as a member variable
+    private JPanel contentPanel;
 
     public AddFlightWindow(MainWindow mw) {
         this.mw = mw;
@@ -52,104 +51,161 @@ public class AddFlightWindow extends JFrame implements ActionListener {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            // Handle look and feel exception
+            System.err.println("Could not set system look and feel: " + ex.getMessage());
         }
 
         setTitle("Add New Flight");
-        setSize(550, 520); // Increased size for more fields and padding
+        setSize(550, 560); 
         setResizable(false);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        contentPanel = new JPanel(new GridBagLayout()); // <--- Initialize here
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBorder(DesignConstants.MAIN_PANEL_BORDER); 
+        contentPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 5, 8, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
+        Font labelFont = DesignConstants.TABLE_ROW_FONT;
+        Font textFieldFont = DesignConstants.TABLE_ROW_FONT;
+        Color textColor = DesignConstants.TEXT_DARK;
+
         int row = 0;
         // Flight Number
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Flight Number:"), gbc);
+        JLabel flightNoLabel = new JLabel("Flight Number:");
+        flightNoLabel.setFont(labelFont);
+        flightNoLabel.setForeground(textColor);
+        contentPanel.add(flightNoLabel, gbc);
         gbc.gridx = 1;
+        flightNoText.setFont(textFieldFont);
+        flightNoText.setForeground(textColor);
         contentPanel.add(flightNoText, gbc);
         row++;
 
         // Origin
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Origin:"), gbc);
+        JLabel originLabel = new JLabel("Origin:");
+        originLabel.setFont(labelFont);
+        originLabel.setForeground(textColor);
+        contentPanel.add(originLabel, gbc);
         gbc.gridx = 1;
+        originText.setFont(textFieldFont);
+        originText.setForeground(textColor);
         contentPanel.add(originText, gbc);
         row++;
 
         // Destination
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Destination:"), gbc);
+        JLabel destinationLabel = new JLabel("Destination:");
+        destinationLabel.setFont(labelFont);
+        destinationLabel.setForeground(textColor);
+        contentPanel.add(destinationLabel, gbc);
         gbc.gridx = 1;
+        destinationText.setFont(textFieldFont);
+        destinationText.setForeground(textColor);
         contentPanel.add(destinationText, gbc);
         row++;
 
         // Departure Date
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Departure Date (YYYY-MM-DD):"), gbc);
+        JLabel depDateLabel = new JLabel("Departure Date (YYYY-MM-DD):");
+        depDateLabel.setFont(labelFont);
+        depDateLabel.setForeground(textColor);
+        contentPanel.add(depDateLabel, gbc);
         gbc.gridx = 1;
+        depDateText.setFont(textFieldFont);
+        depDateText.setForeground(textColor);
         contentPanel.add(depDateText, gbc);
         row++;
 
         // Economy Price
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Economy Price (£):"), gbc);
+        JLabel economyPriceLabel = new JLabel("Economy Price (£):");
+        economyPriceLabel.setFont(labelFont);
+        economyPriceLabel.setForeground(textColor);
+        contentPanel.add(economyPriceLabel, gbc);
         gbc.gridx = 1;
+        economyPriceText.setFont(textFieldFont);
+        economyPriceText.setForeground(textColor);
         contentPanel.add(economyPriceText, gbc);
         row++;
 
         // Total Capacity
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Total Capacity:"), gbc);
+        JLabel capacityLabel = new JLabel("Total Capacity:");
+        capacityLabel.setFont(labelFont);
+        capacityLabel.setForeground(textColor);
+        contentPanel.add(capacityLabel, gbc);
         gbc.gridx = 1;
+        capacityText.setFont(textFieldFont);
+        capacityText.setForeground(textColor);
         contentPanel.add(capacityText, gbc);
         row++;
 
         // Flight Type
         gbc.gridx = 0; gbc.gridy = row;
-        contentPanel.add(new JLabel("Flight Type:"), gbc);
+        JLabel flightTypeLabel = new JLabel("Flight Type:");
+        flightTypeLabel.setFont(labelFont);
+        flightTypeLabel.setForeground(textColor);
+        contentPanel.add(flightTypeLabel, gbc);
         gbc.gridx = 1;
+        flightTypeComboBox.setFont(textFieldFont); 
+        flightTypeComboBox.setForeground(textColor);
         contentPanel.add(flightTypeComboBox, gbc);
         row++;
-
-        // Commercial specific fields - these will be conditionally visible
-        gbc.gridwidth = 2; // Span across two columns for better alignment
-        gbc.anchor = GridBagConstraints.CENTER; // Center labels for these sections
-        gbc.insets = new Insets(15, 5, 5, 5); // More top padding for section
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(15, 5, 5, 5);
         JLabel classCapacityHeader = new JLabel("--- Commercial Class Capacities ---");
-        classCapacityHeader.setFont(classCapacityHeader.getFont().deriveFont(Font.BOLD, 12f));
+        classCapacityHeader.setFont(DesignConstants.TABLE_HEADER_FONT);
+        classCapacityHeader.setForeground(textColor);
         gbc.gridx = 0; gbc.gridy = row;
         contentPanel.add(classCapacityHeader, gbc);
         row++;
-        gbc.insets = new Insets(8, 5, 8, 5); // Reset insets for fields
-        gbc.gridwidth = 1; // Reset to 1 column width
-        gbc.anchor = GridBagConstraints.WEST; // Align to left for fields
+        gbc.insets = new Insets(8, 5, 8, 5);
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0; gbc.gridy = row;
+        premiumEconomyCapacityLabel.setFont(labelFont);
+        premiumEconomyCapacityLabel.setForeground(textColor);
         contentPanel.add(premiumEconomyCapacityLabel, gbc);
         gbc.gridx = 1;
+        premiumEconomyCapacityText.setFont(textFieldFont);
+        premiumEconomyCapacityText.setForeground(textColor);
         contentPanel.add(premiumEconomyCapacityText, gbc);
         row++;
 
         gbc.gridx = 0; gbc.gridy = row;
+        businessCapacityLabel.setFont(labelFont);
+        businessCapacityLabel.setForeground(textColor);
         contentPanel.add(businessCapacityLabel, gbc);
         gbc.gridx = 1;
+        businessCapacityText.setFont(textFieldFont);
+        businessCapacityText.setForeground(textColor);
         contentPanel.add(businessCapacityText, gbc);
         row++;
 
         gbc.gridx = 0; gbc.gridy = row;
+        firstClassCapacityLabel.setFont(labelFont);
+        firstClassCapacityLabel.setForeground(textColor);
         contentPanel.add(firstClassCapacityLabel, gbc);
         gbc.gridx = 1;
+        firstClassCapacityText.setFont(textFieldFont);
+        firstClassCapacityText.setForeground(textColor);
         contentPanel.add(firstClassCapacityText, gbc);
         row++;
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP)); // Using constants for gaps
+        buttonPanel.setBackground(DesignConstants.LIGHT_GRAY_BG); // Consistent background
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, DesignConstants.BUTTON_PANEL_BOTTOM_PADDING, 0)); // Consistent bottom padding
+
+        customizeButton(addBtn);
+        customizeButton(cancelBtn);
+
         buttonPanel.add(addBtn);
         buttonPanel.add(cancelBtn);
 
@@ -161,9 +217,28 @@ public class AddFlightWindow extends JFrame implements ActionListener {
         this.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
         setLocationRelativeTo(mw);
 
-        updateCommercialFieldsVisibility(); // Initial state for commercial flight fields
+        updateCommercialFieldsVisibility();
 
         setVisible(true);
+    }
+
+    private void customizeButton(JButton button) {
+        button.setBackground(DesignConstants.BUTTON_BLUE);
+        button.setForeground(DesignConstants.BUTTON_TEXT_COLOR);
+        button.setFont(DesignConstants.BUTTON_FONT);
+        button.setFocusPainted(false);
+        button.setBorder(DesignConstants.BUTTON_PADDING_BORDER);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(DesignConstants.BUTTON_HOVER_BLUE);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(DesignConstants.BUTTON_BLUE);
+            }
+        });
     }
 
     @Override
@@ -187,16 +262,13 @@ public class AddFlightWindow extends JFrame implements ActionListener {
         firstClassCapacityLabel.setVisible(isCommercial);
         firstClassCapacityText.setVisible(isCommercial);
         
-        // Clear the commercial fields when switching to Budget
         if (!isCommercial) {
             premiumEconomyCapacityText.setText("");
             businessCapacityText.setText("");
             firstClassCapacityText.setText("");
         }
         
-        // Ensure the layout manager revalidates the panel
-        // For GridBagLayout, revalidate() and repaint() on the content panel are usually sufficient
-        contentPanel.revalidate(); 
+        contentPanel.revalidate();
         contentPanel.repaint();
     }
 
@@ -239,7 +311,7 @@ public class AddFlightWindow extends JFrame implements ActionListener {
                 throw new FlightBookingSystemException("Total Capacity must be a valid integer.");
             }
 
-            FlightType flightType = FlightType.valueOf(((String) flightTypeComboBox.getSelectedItem()).toUpperCase().replace(" ", "_")); // Handle "Premium Economy" -> PREMIUM_ECONOMY
+            FlightType flightType = FlightType.valueOf(((String) flightTypeComboBox.getSelectedItem()).toUpperCase());
             
             if (flightType == FlightType.BUDGET) {
                 int newFlightId = mw.getFlightBookingSystem().generateNextFlightId();
@@ -256,7 +328,7 @@ public class AddFlightWindow extends JFrame implements ActionListener {
                     throw new FlightBookingSystemException("All class capacity percentages must be filled for commercial flights.");
                 }
 
-                Map<CommercialClassType, Integer> classPercentages = new HashMap<>(); // Store percentages
+                Map<CommercialClassType, Integer> classPercentages = new HashMap<>();
                 int premiumEconomyPercentage, businessPercentage, firstClassPercentage;
 
                 try {
@@ -274,10 +346,9 @@ public class AddFlightWindow extends JFrame implements ActionListener {
                     throw new FlightBookingSystemException("Class percentages must be valid integers.");
                 }
                 
-                // Calculate actual capacities based on percentages
                 int totalCommercialPercentage = premiumEconomyPercentage + businessPercentage + firstClassPercentage;
-                int economyPercentage = 100 - totalCommercialPercentage;
-                if (economyPercentage < 0) economyPercentage = 0;
+                int economyPercentage = 100 - totalCommercialPercentage; 
+                if (economyPercentage < 0) economyPercentage = 0; 
 
                 Map<CommercialClassType, Integer> classCapacities = new HashMap<>();
                 classCapacities.put(CommercialClassType.ECONOMY, (int) Math.round(capacity * (economyPercentage / 100.0)));
@@ -286,12 +357,9 @@ public class AddFlightWindow extends JFrame implements ActionListener {
                 classCapacities.put(CommercialClassType.FIRST, (int) Math.round(capacity * (firstClassPercentage / 100.0)));
 
                 int currentTotalAllocated = classCapacities.values().stream().mapToInt(Integer::intValue).sum();
-                if (currentTotalAllocated > capacity) {
-                    int diff = currentTotalAllocated - capacity;
-                    classCapacities.put(CommercialClassType.ECONOMY, Math.max(0, classCapacities.get(CommercialClassType.ECONOMY) - diff)); // Ensure non-negative
-                } else if (currentTotalAllocated < capacity) {
+                if (currentTotalAllocated != capacity) {
                     int diff = capacity - currentTotalAllocated;
-                    classCapacities.put(CommercialClassType.ECONOMY, classCapacities.get(CommercialClassType.ECONOMY) + diff);
+                    classCapacities.put(CommercialClassType.ECONOMY, Math.max(0, classCapacities.get(CommercialClassType.ECONOMY) + diff)); 
                 }
                 
                 int newFlightId = mw.getFlightBookingSystem().generateNextFlightId();
@@ -302,8 +370,8 @@ public class AddFlightWindow extends JFrame implements ActionListener {
 
             FlightBookingSystemData.store(mw.getFlightBookingSystem());
             
-            JOptionPane.showMessageDialog(this, 
-                "Flight " + flightNumber + " added successfully!", 
+            JOptionPane.showMessageDialog(this,
+                "Flight " + flightNumber + " added successfully!",
                 "Success", JOptionPane.INFORMATION_MESSAGE);
             
             mw.displayFlights();

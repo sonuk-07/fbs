@@ -124,4 +124,11 @@ public class Meal {
         }
         return sb.toString();
     }
+    
+    @Override
+    public String toString() {
+        return name + " (" + type.toString().toLowerCase() + ") - £" + price.toPlainString();
+    }
+    
+    
 }

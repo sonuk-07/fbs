@@ -25,7 +25,7 @@ public class MainWindow extends JFrame implements ActionListener {
     private JMenu flightsMenu;
     private JMenu bookingsMenu;
     private JMenu customersMenu;
-    private JMenu mealsMenu; 
+    private JMenu mealsMenu;    
 
     private JMenuItem adminExit;
 
@@ -34,15 +34,16 @@ public class MainWindow extends JFrame implements ActionListener {
     private JMenuItem flightsAdd;
 
     private JMenuItem bookingsIssue;
-    private JMenuItem bookingsUpdate;
-    private JMenuItem bookingsCancel;
+    private JMenuItem bookingsViewAll; // Keep this for viewing all bookings
+
+    // Removed: bookingsUpdate, bookingsCancel, bookingsEditBooking, bookingsRebookFlight, bookingsCancelFlight
+    // These actions will now be accessed via BookingDetailsWindow
 
     private JMenuItem custViewActive;
     private JMenuItem custViewAll;
     private JMenuItem custAdd;
 
-    // Renamed and unified this menu item for meals
-    private JMenuItem mealsView; // Only one JMenuItem for viewing meals now
+    private JMenuItem mealsView;
     private JMenuItem mealsAdd;        
 
 
@@ -52,7 +53,8 @@ public class MainWindow extends JFrame implements ActionListener {
     // View windows
     private ViewFlightWindow viewFlightWindow;
     private ViewCustomerWindow viewCustomerWindow;
-    private ViewMealWindow viewMealWindow; 
+    private ViewMealWindow viewMealWindow;    
+    private ViewBookingWindow viewBookingWindow; // NEW: Declare ViewBookingWindow
 
     public MainWindow(FlightBookingSystem fbs) {
         this.fbs = fbs;
@@ -111,19 +113,21 @@ public class MainWindow extends JFrame implements ActionListener {
         flightsViewAll.addActionListener(this);
         flightsAdd.addActionListener(this);
         
-        // Bookings Menu
+        // Bookings Menu (UPDATED - Simplified)
         bookingsMenu = new JMenu("Bookings");
         menuBar.add(bookingsMenu);
-        bookingsIssue = new JMenuItem("Issue Booking");
-        bookingsUpdate = new JMenuItem("Update Booking");
-        bookingsCancel = new JMenuItem("Cancel Booking");
-        bookingsMenu.add(bookingsIssue);
-        bookingsMenu.add(bookingsUpdate);
-        bookingsMenu.add(bookingsCancel);
         
-        for (int i = 0; i < bookingsMenu.getItemCount(); i++) {
-            bookingsMenu.getItem(i).addActionListener(this);
-        }
+        bookingsViewAll = new JMenuItem("View All Bookings"); 
+        bookingsIssue = new JMenuItem("Issue New Booking");
+        
+        bookingsMenu.add(bookingsViewAll); 
+        bookingsMenu.addSeparator(); // Separator for view vs add
+        bookingsMenu.add(bookingsIssue);
+        
+        // Add action listeners for remaining booking menu items
+        bookingsViewAll.addActionListener(this);
+        bookingsIssue.addActionListener(this);
+
 
         // Customers Menu
         customersMenu = new JMenu("Customers");
@@ -141,19 +145,18 @@ public class MainWindow extends JFrame implements ActionListener {
         custViewAll.addActionListener(this);
         custAdd.addActionListener(this);
 
-        // Meals Menu (UPDATED SECTION)
+        // Meals Menu
         mealsMenu = new JMenu("Meals");
         menuBar.add(mealsMenu);
         
-        // Only one menu item for viewing all meals (active and removed)
-        mealsView = new JMenuItem("View All Meals"); 
+        mealsView = new JMenuItem("View All Meals");    
         mealsAdd = new JMenuItem("Add Meal");
         
-        mealsMenu.add(mealsView); // Add the unified view item
+        mealsMenu.add(mealsView);
         mealsMenu.addSeparator();
         mealsMenu.add(mealsAdd);
         
-        mealsView.addActionListener(this); // Add listener to the unified view item
+        mealsView.addActionListener(this);
         mealsAdd.addActionListener(this);
     }
 
@@ -167,7 +170,7 @@ public class MainWindow extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() == adminExit) {
             exitApplication();
-        } 
+        }    
         // Flight Menu Actions
         else if (ae.getSource() == flightsViewActive) {
             showFlightView(false);
@@ -175,7 +178,7 @@ public class MainWindow extends JFrame implements ActionListener {
             showFlightView(true);
         } else if (ae.getSource() == flightsAdd) {
             new AddFlightWindow(this);
-        } 
+        }    
         // Customer Menu Actions
         else if (ae.getSource() == custViewActive) {
             showCustomerView(false);
@@ -184,20 +187,20 @@ public class MainWindow extends JFrame implements ActionListener {
         } else if (ae.getSource() == custAdd) {
             new AddCustomerWindow(this);
         }
-        // Meal Menu Actions (UPDATED SECTION)
-        else if (ae.getSource() == mealsView) { // Now directly linked to the unified menu item
-            showMealView(); // CALL WITHOUT ANY ARGUMENTS
+        // Meal Menu Actions
+        else if (ae.getSource() == mealsView) {
+            showMealView();
         } else if (ae.getSource() == mealsAdd) {
             new AddMealWindow(this);
         }
-        // Booking Menu Actions
-        else if (ae.getSource() == bookingsIssue) {
-            JOptionPane.showMessageDialog(this, "Booking functionality not yet implemented.", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
-        } else if (ae.getSource() == bookingsUpdate) {
-            JOptionPane.showMessageDialog(this, "Booking functionality not yet implemented.", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
-        } else if (ae.getSource() == bookingsCancel) {
-            JOptionPane.showMessageDialog(this, "Booking functionality not yet implemented.", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+        // Booking Menu Actions (UPDATED)
+        else if (ae.getSource() == bookingsViewAll) {
+            showBookingView();
         }
+        else if (ae.getSource() == bookingsIssue) {
+            new IssueBookingWindow(this);
+        }
+        // Removed old booking actions from here: bookingsEditBooking, bookingsRebookFlight, bookingsCancelFlight
     }
 
     private void showFlightView(boolean showAll) {
@@ -206,9 +209,13 @@ public class MainWindow extends JFrame implements ActionListener {
             viewCustomerWindow.cleanup();
             viewCustomerWindow = null;
         }
-        if (viewMealWindow != null) { 
+        if (viewMealWindow != null) {    
             viewMealWindow.cleanup();
             viewMealWindow = null;
+        }
+        if (viewBookingWindow != null) {
+            viewBookingWindow.cleanup();
+            viewBookingWindow = null;
         }
         
         if (viewFlightWindow == null) {
@@ -228,9 +235,13 @@ public class MainWindow extends JFrame implements ActionListener {
             viewFlightWindow.cleanup();
             viewFlightWindow = null;
         }
-        if (viewMealWindow != null) { 
+        if (viewMealWindow != null) {    
             viewMealWindow.cleanup();
             viewMealWindow = null;
+        }
+        if (viewBookingWindow != null) {
+            viewBookingWindow.cleanup();
+            viewBookingWindow = null;
         }
         
         if (viewCustomerWindow == null) {
@@ -244,8 +255,7 @@ public class MainWindow extends JFrame implements ActionListener {
         contentPanel.repaint();
     }
 
-    // Updated method to show the Meal View (no boolean parameter)
-    private void showMealView() { // <--- Signature changed
+    private void showMealView() {
         // Clean up other views if they are active
         if (viewFlightWindow != null) {
             viewFlightWindow.cleanup();
@@ -255,6 +265,10 @@ public class MainWindow extends JFrame implements ActionListener {
             viewCustomerWindow.cleanup();
             viewCustomerWindow = null;
         }
+        if (viewBookingWindow != null) {
+            viewBookingWindow.cleanup();
+            viewBookingWindow = null;
+        }
         
         if (viewMealWindow == null) {
             viewMealWindow = new ViewMealWindow(this, fbs);
@@ -262,7 +276,33 @@ public class MainWindow extends JFrame implements ActionListener {
         
         contentPanel.removeAll();
         contentPanel.add(viewMealWindow.getPanel(), BorderLayout.CENTER);
-        viewMealWindow.displayMeals(); // <--- Call without parameters
+        viewMealWindow.displayMeals();
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showBookingView() {
+        // Clean up other views if they are active
+        if (viewFlightWindow != null) {
+            viewFlightWindow.cleanup();
+            viewFlightWindow = null;
+        }
+        if (viewCustomerWindow != null) {
+            viewCustomerWindow.cleanup();
+            viewCustomerWindow = null;
+        }
+        if (viewMealWindow != null) {
+            viewMealWindow.cleanup();
+            viewMealWindow = null;
+        }
+
+        if (viewBookingWindow == null) {
+            viewBookingWindow = new ViewBookingWindow(this, fbs);
+        }
+        
+        contentPanel.removeAll();
+        contentPanel.add(viewBookingWindow.getPanel(), BorderLayout.CENTER);
+        viewBookingWindow.displayBookings(); 
         contentPanel.revalidate();
         contentPanel.repaint();
     }
@@ -284,13 +324,15 @@ public class MainWindow extends JFrame implements ActionListener {
         } else if (viewCustomerWindow != null && contentPanel.isAncestorOf(viewCustomerWindow.getPanel())) {
             viewCustomerWindow.refreshView();
         } else if (viewMealWindow != null && contentPanel.isAncestorOf(viewMealWindow.getPanel())) {
-            viewMealWindow.refreshView(); // Calls refreshView without parameters
+            viewMealWindow.refreshView();
+        } else if (viewBookingWindow != null && contentPanel.isAncestorOf(viewBookingWindow.getPanel())) {
+            viewBookingWindow.refreshView();
         }
     }
 
     public void displayFlights() {
         if (viewFlightWindow != null && contentPanel.isAncestorOf(viewFlightWindow.getPanel())) {
-            viewFlightWindow.displayFlights(false); 
+            viewFlightWindow.displayFlights(false);    
         } else {
             showFlightView(false);
         }
@@ -298,7 +340,7 @@ public class MainWindow extends JFrame implements ActionListener {
 
     public void displayCustomers() {
         if (viewCustomerWindow != null && contentPanel.isAncestorOf(viewCustomerWindow.getPanel())) {
-            viewCustomerWindow.displayCustomers(false); 
+            viewCustomerWindow.displayCustomers(false);    
         } else {
             showCustomerView(false);
         }
@@ -309,11 +351,24 @@ public class MainWindow extends JFrame implements ActionListener {
      * If the meal view is currently active, it refreshes the table.
      * Otherwise, it switches to the meal view.
      */
-    public void displayMeals() { // This method in MainWindow now calls without arguments
+    public void displayMeals() {
         if (viewMealWindow != null && contentPanel.isAncestorOf(viewMealWindow.getPanel())) {
-            viewMealWindow.displayMeals(); // <--- Call without parameters
+            viewMealWindow.displayMeals();
         } else {
-            showMealView(); // <--- Call without parameters
+            showMealView();
+        }
+    }
+
+    /**
+     * Refreshes the display of bookings in the main window.
+     * If the booking view is currently active, it refreshes the table.
+     * Otherwise, it switches to the booking view.
+     */
+    public void displayBookings() { 
+        if (viewBookingWindow != null && contentPanel.isAncestorOf(viewBookingWindow.getPanel())) {
+            viewBookingWindow.displayBookings();
+        } else {
+            showBookingView();
         }
     }
 }

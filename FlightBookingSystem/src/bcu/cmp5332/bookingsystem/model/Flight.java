@@ -461,4 +461,11 @@ public class Flight {
 	public void setDeleted(boolean deleted) {
 		this.deleted = deleted;
 	}
+	
+	@Override
+	public String toString() {
+	    return flightNumber + " (" + origin + " to " + destination + ") - " + departureDate;
+	}
+	
+	
 }

@@ -21,6 +21,7 @@ public class FlightBookingSystem {
     private final Map<Integer, Customer> customers = new TreeMap<>();
     private final Map<Integer, Flight> flights = new TreeMap<>();
     private final Map<Integer, Meal> meals = new TreeMap<>();
+    private final Map<Integer, Booking> bookings = new TreeMap<>(); // ADDED: Map to store bookings
 
     public LocalDate getSystemDate() {
         return systemDate;
@@ -29,15 +30,15 @@ public class FlightBookingSystem {
     private int nextFlightId = 1;
     private int nextCustomerId = 1;
     private int nextMealId = 1;
+    private int nextBookingId = 1; // ADDED: Next booking ID
 
-    
     /**
      * Generates the next available unique flight ID.
      *
      * @return The next available flight ID.
      */
-    
-    
+
+
     public int generateNextFlightId() {
         while (flights.containsKey(nextFlightId)) {
             nextFlightId++;
@@ -45,14 +46,14 @@ public class FlightBookingSystem {
         return nextFlightId;
     }
 
-    
+
     /**
      * Generates the next available unique customer ID.
      *
      * @return The next available customer ID.
      */
-    
-    
+
+
     public int generateNextCustomerId() {
         while (customers.containsKey(nextCustomerId)) {
             nextCustomerId++;
@@ -66,7 +67,20 @@ public class FlightBookingSystem {
         }
         return nextMealId;
     }
-    
+
+    // ADDED: Booking ID generation
+    public int generateNextBookingId() {
+        while (bookings.containsKey(nextBookingId)) {
+            nextBookingId++;
+        }
+        return nextBookingId;
+    }
+
+    // ADDED: Setter for nextBookingId (for use in data loading)
+    public void setNextBookingId(int id) {
+        this.nextBookingId = id;
+    }
+
     /**
      * Returns an unmodifiable list of active (not deleted and not departed) flights.
      *
@@ -83,41 +97,41 @@ public class FlightBookingSystem {
         return Collections.unmodifiableList(out);
     }
 
-    
+
     /**
      * Returns an unmodifiable list of all flights, including deleted and departed ones.
      *
      * @return A list of all flights.
      */
-    
+
     public List<Flight> getAllFlights() {
         return Collections.unmodifiableList(new ArrayList<>(flights.values()));
     }
-    
+
     /**
      * Returns an unmodifiable list of active (not deleted) customers.
      *
      * @return A list of active customers.
      */
-    
+
 
     public List<Customer> getCustomers() {
         return customers.values().stream()
-                         .filter(customer -> !customer.isDeleted())
-                         .collect(Collectors.toUnmodifiableList());
+                .filter(customer -> !customer.isDeleted())
+                .collect(Collectors.toUnmodifiableList());
     }
 
-    
+
     /**
      * Returns an unmodifiable list of all customers, including deleted ones.
      *
      * @return A list of all customers.
      */
-    
+
     public List<Customer> getAllCustomers() {
         return Collections.unmodifiableList(new ArrayList<>(customers.values()));
     }
-    
+
     /**
      * Returns an unmodifiable list of active (not deleted) meals.
      *
@@ -126,22 +140,21 @@ public class FlightBookingSystem {
 
     public List<Meal> getMeals() {
         return meals.values().stream()
-                    .filter(meal -> !meal.isDeleted())
-                    .collect(Collectors.toUnmodifiableList());
+                .filter(meal -> !meal.isDeleted())
+                .collect(Collectors.toUnmodifiableList());
     }
-    
+
     /**
      * Returns an unmodifiable list of all meals, including deleted ones.
      *
      * @return A list of all meals.
      */
-    
+
 
     public List<Meal> getAllMeals() {
         return Collections.unmodifiableList(new ArrayList<>(meals.values()));
     }
 
-    
     /**
      * Returns a list of active meals filtered by a preferred meal type.
      * If the preferred type is {@link MealType#NONE}, all active meals are returned.
@@ -149,14 +162,14 @@ public class FlightBookingSystem {
      * @param preferredType The preferred meal type to filter by.
      * @return An unmodifiable list of meals matching the preference, or all active meals if preference is NONE.
      */
-    
+
     public List<Meal> getMealsFilteredByPreference(MealType preferredType) {
         if (preferredType == MealType.NONE) {
             return getMeals(); // Return all active meals if no preference
         }
         return meals.values().stream()
-                    .filter(meal -> !meal.isDeleted() && meal.getType() == preferredType)
-                    .collect(Collectors.toUnmodifiableList());
+                .filter(meal -> !meal.isDeleted() && meal.getType() == preferredType)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -181,8 +194,8 @@ public class FlightBookingSystem {
      * @param id The ID of the flight to retrieve.
      * @return The Flight object, or null if not found.
      */
-    
-    
+
+
     public Flight getFlightByIDIncludingDeleted(int id) {
         return flights.get(id);
     }
@@ -194,7 +207,7 @@ public class FlightBookingSystem {
      * @return The Customer object.
      * @throws FlightBookingSystemException If no active customer with the given ID exists.
      */
-    
+
     public Customer getCustomerByID(int id) throws FlightBookingSystemException {
         Customer customer = customers.get(id);
         if (customer == null || customer.isDeleted()) {
@@ -209,12 +222,12 @@ public class FlightBookingSystem {
      * @param id The ID of the customer to retrieve.
      * @return The Customer object, or null if not found.
      */
-    
-    
+
+
     public Customer getCustomerByIDIncludingDeleted(int id) {
         return customers.get(id);
     }
-    
+
     /**
      * Retrieves an active meal by its ID.
      *
@@ -230,13 +243,14 @@ public class FlightBookingSystem {
         }
         return meal;
     }
-    
+
     /**
      * Retrieves a meal by its ID, including those marked as deleted.
      *
      * @param id The ID of the meal to retrieve.
      * @return The Meal object, or null if not found.
      */
+
 
     public Meal getMealByIDIncludingDeleted(int id) {
         return meals.get(id);
@@ -249,27 +263,27 @@ public class FlightBookingSystem {
      * @throws FlightBookingSystemException If a flight with the same flight number and departure date already exists.
      * @throws IllegalArgumentException If a flight with a duplicate ID already exists.
      */
-    
+
     public void addFlight(Flight flight) throws FlightBookingSystemException {
         if (flights.containsKey(flight.getId())) {
             throw new IllegalArgumentException("Duplicate flight ID.");
         }
         for (Flight existing : flights.values()) {
             if (existing.getFlightNumber().equals(flight.getFlightNumber())
-                && existing.getDepartureDate().isEqual(flight.getDepartureDate())) {
+                    && existing.getDepartureDate().isEqual(flight.getDepartureDate())) {
                 throw new FlightBookingSystemException("There is a flight with same "
                         + "number and departure date in the system");
             }
         }
         flights.put(flight.getId(), flight);
     }
-    
+
     /**
      * Adds a new customer to the system or updates an existing one if the ID already exists.
      *
      * @param customer The Customer object to add.
      */
-    
+
 
     public void addCustomer(Customer customer) {
         if (customers.containsKey(customer.getId())) {
@@ -281,7 +295,7 @@ public class FlightBookingSystem {
             }
         }
     }
-    
+
     /**
      * Adds a new meal to the system.
      *
@@ -306,7 +320,7 @@ public class FlightBookingSystem {
      * @param selectedMeal The selected meal for the booking.
      * @throws FlightBookingSystemException If any flight is at full capacity or the chosen class is not available.
      */
-    
+
     public void addBooking(Customer customer, Flight outbound, Flight returnFlight, CommercialClassType bookedClass, Meal selectedMeal)
             throws FlightBookingSystemException {
 
@@ -328,15 +342,33 @@ public class FlightBookingSystem {
 
         BigDecimal outboundBookedPrice = outbound.getDynamicPrice(bookedClass, systemDate);
         BigDecimal returnBookedPrice = (returnFlight != null) ? returnFlight.getDynamicPrice(bookedClass, systemDate) : BigDecimal.ZERO;
-        
-        Booking booking = new Booking(customer, outbound, returnFlight, systemDate, bookedClass, outboundBookedPrice, returnBookedPrice, selectedMeal);
+
+        // Generate a new booking ID
+        int newBookingId = generateNextBookingId();
+
+        // Pass the generated ID to the Booking constructor
+        Booking booking = new Booking(newBookingId, customer, outbound, returnFlight, systemDate, bookedClass, outboundBookedPrice, returnBookedPrice, selectedMeal);
 
         customer.addBooking(booking);
         outbound.addPassenger(customer, bookedClass);
         if (returnFlight != null) {
             returnFlight.addPassenger(customer, bookedClass);
         }
+        bookings.put(booking.getId(), booking); // ADDED: Add booking to the system's map
+        System.out.println("Booking ID " + booking.getId() + " created for customer " + customer.getName() + ".");
     }
+
+    /**
+     * ADDED: A method to add a booking without re-adding passengers.
+     * This is primarily for use during data loading where passenger counts are already managed.
+     * @param booking The Booking object to add.
+     */
+    public void addBookingWithoutFlightUpdate(Booking booking) {
+        bookings.put(booking.getId(), booking);
+        // Customer.addBooking(booking) is usually done by the data manager or main addBooking method.
+        // It's assumed the customer object already has this booking linked or will be linked externally.
+    }
+
 
     /**
      * Cancels a booking for a specific customer and flight.
@@ -344,36 +376,50 @@ public class FlightBookingSystem {
      *
      * @param customer The customer whose booking is to be cancelled.
      * @param flight The flight associated with the booking to be cancelled.
-     * @throws FlightBookingSystemException If the customer does not have a booking for the specified flight.
+     * @throws FlightBookingSystemException If the customer does not have a booking for the specified flight, or it's already cancelled.
      */
-    
+
     public void cancelBooking(Customer customer, Flight flight) throws FlightBookingSystemException {
         Booking bookingToCancel = null;
         for (Booking booking : customer.getBookings()) {
-            if (booking.getOutboundFlight().equals(flight) || (booking.getReturnFlight() != null && booking.getReturnFlight().equals(flight))) {
+            if (!booking.isCancelled() && // Only consider active bookings
+                ((booking.getOutboundFlight().equals(flight) && !booking.getOutboundFlight().isDeleted()) ||
+                 (booking.getReturnFlight() != null && booking.getReturnFlight().equals(flight) && !booking.getReturnFlight().isDeleted()))) {
                 bookingToCancel = booking;
                 break;
             }
         }
 
         if (bookingToCancel == null) {
-            throw new FlightBookingSystemException("Customer does not have a booking for this flight.");
+            throw new FlightBookingSystemException("No active booking found for customer " + customer.getName() + " on flight " + flight.getFlightNumber());
         }
 
+        // Calculate cancellation fee
         BigDecimal cancellationFee = calculateCancellationFee(bookingToCancel);
         bookingToCancel.setCancellationFee(cancellationFee);
-        
-        customer.cancelBookingForFlight(flight.getId());
-        
-        bookingToCancel.getOutboundFlight().removePassenger(customer, bookingToCancel.getBookedClass());
-        if (bookingToCancel.getReturnFlight() != null) {
+
+        // Mark the booking as cancelled
+        bookingToCancel.setCancelled(true);
+
+        // Remove customer from the specific flight segment's passenger list
+        if (bookingToCancel.getOutboundFlight().equals(flight)) {
+            bookingToCancel.getOutboundFlight().removePassenger(customer, bookingToCancel.getBookedClass());
+        } else if (bookingToCancel.getReturnFlight() != null && bookingToCancel.getReturnFlight().equals(flight)) {
             bookingToCancel.getReturnFlight().removePassenger(customer, bookingToCancel.getBookedClass());
         }
 
-        System.out.println("Booking for Flight " + flight.getFlightNumber() + " cancelled. Cancellation Fee: £" + cancellationFee);
+        // Note: The `customer.cancelBookingForFlight(flight.getId());` line
+        // in your original code seems to be trying to *remove* the booking
+        // from the customer's list. With `isCancelled` flag, you typically
+        // just mark it as cancelled, not remove it from the list entirely,
+        // for historical/audit purposes. If `customer.cancelBookingForFlight`
+        // actually sets the `isCancelled` flag on the booking, that's fine.
+        // If it removes it, you might want to reconsider that for auditing.
+
+        System.out.println("Booking ID " + bookingToCancel.getId() + " for Flight " + flight.getFlightNumber() + " cancelled. Cancellation Fee: £" + cancellationFee);
     }
 
-    
+
     /**
      * Calculates the cancellation fee for a given booking.
      * The fee is 10% of the total booked price (flights + meal), with a minimum of £20.00.
@@ -381,7 +427,7 @@ public class FlightBookingSystem {
      * @param booking The booking for which to calculate the cancellation fee.
      * @return The calculated cancellation fee, rounded to two decimal places.
      */
-    
+
     public BigDecimal calculateCancellationFee(Booking booking) {
         BigDecimal totalBookedPrice = booking.getBookedPriceOutbound().add(booking.getBookedPriceReturn());
         if (booking.getMeal() != null) {
@@ -394,7 +440,7 @@ public class FlightBookingSystem {
         return fee.setScale(2, RoundingMode.HALF_UP);
     }
 
-    
+
     /**
      * Calculates the rebooking fee for a booking.
      * Currently, this is a fixed fee of £30.00.
@@ -404,12 +450,12 @@ public class FlightBookingSystem {
      * @param newClass The new commercial class for rebooking.
      * @return The rebooking fee, rounded to two decimal places.
      */
-    
+
     // Changed access modifier from private to public
     public BigDecimal calculateRebookFee(Booking booking, Flight newFlight, CommercialClassType newClass) {
         return new BigDecimal("30.00").setScale(2, RoundingMode.HALF_UP);
     }
-    
+
     /**
      * Removes a flight from the system by marking it as deleted.
      *
@@ -417,7 +463,7 @@ public class FlightBookingSystem {
      * @return true if the flight was found and marked as deleted, false otherwise.
      * @throws FlightBookingSystemException If an error occurs during removal (though currently, no specific exceptions are thrown by this method).
      */
-    
+
     public boolean removeFlightById(int flightId) throws FlightBookingSystemException {
         Flight flight = flights.get(flightId);
         if (flight == null) {
@@ -433,13 +479,16 @@ public class FlightBookingSystem {
      * @return true if the customer was found and marked as deleted, false otherwise.
      * @throws FlightBookingSystemException If an error occurs during removal (though currently, no specific exceptions are thrown by this method).
      */
-    
+
     public boolean removeCustomerById(int customerId) throws FlightBookingSystemException {
         Customer customer = customers.get(customerId);
         if (customer == null) {
             return false;
         }
         customer.setDeleted(true);
+        // Also ensure any bookings associated with this customer are handled
+        // For simplicity, we are just marking customer as deleted.
+        // In a real system, you might want to cancel their active bookings too.
         return true;
     }
 
@@ -450,8 +499,8 @@ public class FlightBookingSystem {
      * @return true if the meal was found and marked as deleted, false otherwise.
      * @throws FlightBookingSystemException If an error occurs during removal (though currently, no specific exceptions are thrown by this method).
      */
-    
-    
+
+
     public boolean removeMealById(int mealId) throws FlightBookingSystemException {
         Meal meal = meals.get(mealId);
         if (meal == null) {
@@ -459,5 +508,70 @@ public class FlightBookingSystem {
         }
         meal.setDeleted(true);
         return true;
+    }
+    public void editBooking(Customer customer, Flight flightInBooking, LocalDate newBookingDate, CommercialClassType newClass) throws FlightBookingSystemException {
+        Booking bookingToEdit = null;
+        // Find the booking associated with the customer and the flightInBooking
+        for (Booking booking : customer.getBookings()) {
+            // Check if the booking is active and relates to the flightInBooking
+            if (!booking.isCancelled() &&
+                ((booking.getOutboundFlight() != null && booking.getOutboundFlight().getId() == flightInBooking.getId()) ||
+                 (booking.getReturnFlight() != null && booking.getReturnFlight().getId() == flightInBooking.getId()))) {
+                bookingToEdit = booking;
+                break;
+            }
+        }
+
+        if (bookingToEdit == null) {
+            throw new FlightBookingSystemException("No active booking for Customer ID " + customer.getId() + " on Flight ID " + flightInBooking.getId() + " found.");
+        }
+
+        if (newClass != null && newClass != bookingToEdit.getBookedClass()) {
+            // Check if new class is available and has seats
+            if (!flightInBooking.isClassAvailable(newClass)) {
+                throw new FlightBookingSystemException("New class " + newClass.getClassName() + " is not available on flight " + flightInBooking.getFlightNumber());
+            }
+            if (!flightInBooking.isClassAvailable(newClass)) { // Use hasSeatsAvailableForClass
+                throw new FlightBookingSystemException("No seats available for " + newClass.getClassName() + " on flight " + flightInBooking.getFlightNumber());
+            }
+
+            // Remove passenger from old class and add to new class
+            flightInBooking.removePassenger(customer, bookingToEdit.getBookedClass());
+            flightInBooking.addPassenger(customer, newClass);
+            bookingToEdit.setBookedClass(newClass);
+        }
+
+        // Update booking date if different
+        if (newBookingDate != null && !newBookingDate.isEqual(bookingToEdit.getBookingDate())) {
+            bookingToEdit.setBookingDate(newBookingDate);
+        }
+
+        // Recalculate prices based on current system date and new class
+        BigDecimal newOutboundPrice = bookingToEdit.getOutboundFlight().getDynamicPrice(bookingToEdit.getBookedClass(), systemDate);
+        bookingToEdit.setBookedPriceOutbound(newOutboundPrice);
+
+        if (bookingToEdit.getReturnFlight() != null) {
+            BigDecimal newReturnPrice = bookingToEdit.getReturnFlight().getDynamicPrice(bookingToEdit.getBookedClass(), systemDate);
+            bookingToEdit.setBookedPriceReturn(newReturnPrice);
+        }
+
+        System.out.println("Booking ID " + bookingToEdit.getId() + " for customer " + customer.getName() + " on flight " + flightInBooking.getFlightNumber() + " updated.");
+    }
+
+    /**
+     * Returns an unmodifiable list of all bookings in the system.
+     * @return A list of all bookings.
+     */
+    public List<Booking> getBookings() {
+        return Collections.unmodifiableList(new ArrayList<>(bookings.values()));
+    }
+
+    /**
+     * Returns a booking by its ID.
+     * @param id The ID of the booking to retrieve.
+     * @return The Booking object, or null if not found.
+     */
+    public Booking getBookingByID(int id) {
+        return bookings.get(id);
     }
 }

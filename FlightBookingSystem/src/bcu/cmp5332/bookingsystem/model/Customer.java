@@ -209,4 +209,9 @@ public class Customer {
         }
         return false;
     }
+    
+    @Override
+    public String toString() {
+        return "ID: " + id + " - " + name + " (" + email + ")";
+    }
 }

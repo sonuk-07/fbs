@@ -1,4 +1,4 @@
-1::FH001::Kathmandu::Pokhara::2025-07-10::5000::100::BUDGET::::false::ECONOMY:20
+1::FH001::Kathmandu::Pokhara::2025-07-10::5000::100::BUDGET::::false::ECONOMY:21
 2::001::kathmandu::parsa::2025-09-11::200::200::BUDGET::::false::ECONOMY:5
 3::002::parsa::lumbini::2025-10-11::100::200::COMMERCIAL::ECONOMY:100,PREMIUM_ECONOMY:50,BUSINESS:40,FIRST:5::false::ECONOMY:2,PREMIUM_ECONOMY:4,BUSINESS:2,FIRST:1
 4::sh2332::new york::san fransico::2025-01-01::200::200::BUDGET::::false::ECONOMY:0

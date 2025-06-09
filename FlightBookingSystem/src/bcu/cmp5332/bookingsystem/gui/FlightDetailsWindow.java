@@ -31,13 +31,14 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate; // Import LocalDate
 
 public class FlightDetailsWindow extends JFrame implements ActionListener {
 
     private MainWindow mw;
     private Flight flight;
 
-    private JLabel flightIdValueLabel = new JLabel(); 
+    private JLabel flightIdValueLabel = new JLabel();
     private JLabel flightNoValueLabel = new JLabel();
     private JLabel originValueLabel = new JLabel();
     private JLabel destinationValueLabel = new JLabel();
@@ -45,7 +46,7 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
     private JLabel economyPriceValueLabel = new JLabel();
     private JLabel totalCapacityValueLabel = new JLabel();
     private JLabel flightTypeValueLabel = new JLabel();
-    private JLabel statusValueLabel = new JLabel(); 
+    private JLabel statusValueLabel = new JLabel(); // This will now display "Departed"
 
     private JPanel commercialClassPanel;
     private JTable classCapacityTable;
@@ -68,8 +69,7 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         }
 
         setTitle("Flight Details: " + flight.getFlightNumber());
-        // Increased window width slightly to accommodate wider table columns
-        setSize(680, 580); // Original: 600
+        setSize(680, 580);
         setResizable(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -112,7 +112,7 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         row++;
 
         gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Departure Date:", true), gbc);
-        gbc.gridx = 1; depDateValueLabel.setText(flight.getDepartureDate() != null ? 
+        gbc.gridx = 1; depDateValueLabel.setText(flight.getDepartureDate() != null ?
                                      flight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "N/A");
         depDateValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(depDateValueLabel, gbc);
@@ -129,7 +129,7 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         totalCapacityValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
         infoPanel.add(totalCapacityValueLabel, gbc);
         row++;
-        
+
         gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Flight Type:", true), gbc);
         gbc.gridx = 1; flightTypeValueLabel.setText(flight.getFlightType() == FlightType.COMMERCIAL ? "Commercial" : "Budget");
         flightTypeValueLabel.setFont(DesignConstants.INFO_VALUE_FONT);
@@ -137,10 +137,8 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         row++;
 
         gbc.gridx = 0; gbc.gridy = row; infoPanel.add(createLabel("Status:", true), gbc);
-        gbc.gridx = 1; 
-        statusValueLabel.setText(flight.isDeleted() ? "Removed" : "Active");
-        statusValueLabel.setForeground(flight.isDeleted() ? DesignConstants.STATUS_CANCELLED_RED : DesignConstants.STATUS_ACTIVE_GREEN);
-        statusValueLabel.setFont(DesignConstants.STATUS_FONT);
+        gbc.gridx = 1;
+        updateStatusLabel(); // Call the new method to set status
         infoPanel.add(statusValueLabel, gbc);
 
         mainPanel.add(infoPanel, BorderLayout.NORTH);
@@ -175,34 +173,38 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, DesignConstants.BUTTON_PANEL_H_GAP, DesignConstants.BUTTON_PANEL_V_GAP));
 
-        // Use DesignConstants.BUTTON_TEXT_COLOR for removeFlightBtn
         customizeButton(removeFlightBtn, DesignConstants.REMOVE_BUTTON_RED, DesignConstants.REMOVE_BUTTON_HOVER_RED, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         bottomPanel.add(removeFlightBtn);
 
-        // Use DesignConstants.BUTTON_TEXT_COLOR for closeBtn
         customizeButton(closeBtn, DesignConstants.CLOSE_BUTTON_BG, DesignConstants.CLOSE_BUTTON_HOVER, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         bottomPanel.add(closeBtn);
-        
+
+        // Logic for enabling/disabling remove flight button
         if (flight.isDeleted()) {
             removeFlightBtn.setEnabled(false);
             removeFlightBtn.setText("Flight Already Removed");
             removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
-            removeFlightBtn.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {}
-                @Override
-                public void mouseExited(MouseEvent e) {}
+            removeFlightBtn.addMouseListener(new MouseAdapter() { // Disable hover effect
+                @Override public void mouseEntered(MouseEvent e) {}
+                @Override public void mouseExited(MouseEvent e) {}
             });
         } else {
-            if (!flight.getPassengers().isEmpty()) { 
+            // Check if flight has departed or has passengers
+            if (flight.getDepartureDate().isBefore(mw.getFlightBookingSystem().getSystemDate())) {
+                removeFlightBtn.setEnabled(false);
+                removeFlightBtn.setText("Cannot Remove (Departed)");
+                removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
+                removeFlightBtn.addMouseListener(new MouseAdapter() { // Disable hover effect
+                    @Override public void mouseEntered(MouseEvent e) {}
+                    @Override public void mouseExited(MouseEvent e) {}
+                });
+            } else if (!flight.getPassengers().isEmpty()) {
                 removeFlightBtn.setEnabled(false);
                 removeFlightBtn.setText("Cannot Remove (Has Passengers)");
                 removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
-                removeFlightBtn.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseEntered(MouseEvent e) {}
-                    @Override
-                    public void mouseExited(MouseEvent e) {}
+                removeFlightBtn.addMouseListener(new MouseAdapter() { // Disable hover effect
+                    @Override public void mouseEntered(MouseEvent e) {}
+                    @Override public void mouseExited(MouseEvent e) {}
                 });
             }
         }
@@ -213,6 +215,26 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         setLocationRelativeTo(mw);
         setVisible(true);
     }
+
+    /**
+     * Determines and sets the text and color for the flight status label.
+     */
+    private void updateStatusLabel() {
+        if (flight.isDeleted()) {
+            statusValueLabel.setText("Removed");
+            statusValueLabel.setForeground(DesignConstants.STATUS_CANCELLED_RED);
+        } else if (flight.getDepartureDate().isBefore(mw.getFlightBookingSystem().getSystemDate())) {
+            // Flight has departed
+            statusValueLabel.setText("Departed");
+            statusValueLabel.setForeground(DesignConstants.STATUS_DEPARTED_ORANGE); // You'll need to define this color
+        } else {
+            // Flight is active and has not departed
+            statusValueLabel.setText("Active");
+            statusValueLabel.setForeground(DesignConstants.STATUS_ACTIVE_GREEN);
+        }
+        statusValueLabel.setFont(DesignConstants.STATUS_FONT);
+    }
+
 
     private JLabel createLabel(String text, boolean isBold) {
         JLabel label = new JLabel(text);
@@ -246,28 +268,28 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
     }
 
     private void setupCommercialClassTable() {
-        String[] columns = new String[]{"Class Type", "Total Capacity", "Available Seats"}; 
+        String[] columns = new String[]{"Class Type", "Total Capacity", "Available Seats"};
         classCapacityTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        
+
         Map<CommercialClassType, Integer> classCapacities = flight.getClassCapacities();
-        
+
         CommercialClassType[] displayOrder = {
             CommercialClassType.FIRST,
             CommercialClassType.BUSINESS,
             CommercialClassType.PREMIUM_ECONOMY,
             CommercialClassType.ECONOMY
         };
-        
+
         for (CommercialClassType type : displayOrder) {
             int total = classCapacities.getOrDefault(type, 0);
             int occupied = flight.getOccupiedSeatsByClass(type);
             int available = total - occupied;
-            
+
             classCapacityTableModel.addRow(new Object[]{
                 type.getClassName(),
                 total,
@@ -276,7 +298,7 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         }
 
         classCapacityTable = new JTable(classCapacityTableModel);
-        
+
         classCapacityTable.setRowHeight(DesignConstants.TABLE_ROW_HEIGHT);
         classCapacityTable.setShowGrid(true);
         classCapacityTable.setGridColor(DesignConstants.TABLE_GRID_COLOR);
@@ -286,10 +308,9 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         classCapacityTable.getTableHeader().setForeground(DesignConstants.TABLE_HEADER_FOREGROUND_COLOR);
         classCapacityTable.getTableHeader().setReorderingAllowed(false);
 
-        // Increased preferred widths for better visibility
-        classCapacityTable.getColumnModel().getColumn(0).setPreferredWidth(150); // Original: 120
-        classCapacityTable.getColumnModel().getColumn(1).setPreferredWidth(100); // Original: 80
-        classCapacityTable.getColumnModel().getColumn(2).setPreferredWidth(120); // Original: 100
+        classCapacityTable.getColumnModel().getColumn(0).setPreferredWidth(150);
+        classCapacityTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+        classCapacityTable.getColumnModel().getColumn(2).setPreferredWidth(120);
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -307,41 +328,53 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
             removeFlight();
         }
     }
-    
+
     private void removeFlight() {
-        int confirm = JOptionPane.showConfirmDialog(this, 
+        int confirm = JOptionPane.showConfirmDialog(this,
             "Are you sure you want to remove flight " + flight.getFlightNumber() + " (ID: " + flight.getId() + ")?\n" +
-            "This will mark the flight as removed and it will no longer appear in active lists.", 
+            "This will mark the flight as removed and it will no longer appear in active lists.",
             "Confirm Removal", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                boolean removed = mw.getFlightBookingSystem().removeFlightById(flight.getId()); 
+                // Ensure no passengers or has departed before trying to remove
+                if (flight.getDepartureDate().isBefore(mw.getFlightBookingSystem().getSystemDate())) {
+                    JOptionPane.showMessageDialog(this,
+                        "Cannot remove a flight that has already departed.",
+                        "Removal Failed", JOptionPane.WARNING_MESSAGE);
+                    return; // Exit if already departed
+                }
+                if (!flight.getPassengers().isEmpty()) {
+                    JOptionPane.showMessageDialog(this,
+                        "Cannot remove a flight with existing passengers. Please remove all bookings first.",
+                        "Removal Failed", JOptionPane.WARNING_MESSAGE);
+                    return; // Exit if has passengers
+                }
+
+                boolean removed = mw.getFlightBookingSystem().removeFlightById(flight.getId());
 
                 if (removed) {
                     FlightBookingSystemData.store(mw.getFlightBookingSystem());
-                    
-                    JOptionPane.showMessageDialog(this, 
-                        "Flight " + flight.getFlightNumber() + " (ID: " + flight.getId() + ") has been successfully marked as removed.", 
+
+                    JOptionPane.showMessageDialog(this,
+                        "Flight " + flight.getFlightNumber() + " (ID: " + flight.getId() + ") has been successfully marked as removed.",
                         "Removal Successful", JOptionPane.INFORMATION_MESSAGE);
-                    
-                    statusValueLabel.setText("Removed");
-                    statusValueLabel.setForeground(DesignConstants.STATUS_CANCELLED_RED);
+
+                    // Update UI immediately after successful removal
+                    updateStatusLabel(); // Re-evaluate status (will now be "Removed")
                     removeFlightBtn.setEnabled(false);
                     removeFlightBtn.setText("Flight Already Removed");
                     removeFlightBtn.setBackground(DesignConstants.DISABLED_BUTTON_BG);
-                    removeFlightBtn.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseEntered(MouseEvent e) {}
-                        @Override
-                        public void mouseExited(MouseEvent e) {}
+                    removeFlightBtn.addMouseListener(new MouseAdapter() { // Disable hover effect
+                        @Override public void mouseEntered(MouseEvent e) {}
+                        @Override public void mouseExited(MouseEvent e) {}
                     });
-                    
-                    mw.displayFlights();
-                    this.dispose();
+
+                    mw.displayFlights(); // Refresh the main window's flight list
+                    this.dispose(); // Close the details window
                 } else {
-                    JOptionPane.showMessageDialog(this, 
-                        "Flight with ID " + flight.getId() + " was not found or could not be removed.", 
+                    JOptionPane.showMessageDialog(this,
+                        "Flight with ID " + flight.getId() + " was not found or could not be removed.",
                         "Removal Failed", JOptionPane.WARNING_MESSAGE);
                 }
 
@@ -357,11 +390,11 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
         @Override
         public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
-            
+
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            
+
             setHorizontalAlignment(JLabel.CENTER);
-            
+
             if (value instanceof Integer) {
                 int availableSeats = (Integer) value;
                 int totalCapacity = 0;
@@ -370,7 +403,7 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
                 } catch (ClassCastException | IndexOutOfBoundsException e) {
                     System.err.println("Error getting total capacity for renderer: " + e.getMessage());
                 }
-                
+
                 if (availableSeats == 0) {
                     setBackground(isSelected ? DesignConstants.AVAILABLE_SEATS_NONE_BG.darker() : DesignConstants.AVAILABLE_SEATS_NONE_BG);
                     setForeground(DesignConstants.AVAILABLE_SEATS_NONE_FG);
@@ -378,15 +411,14 @@ public class FlightDetailsWindow extends JFrame implements ActionListener {
                     setBackground(isSelected ? DesignConstants.AVAILABLE_SEATS_LOW_BG.darker() : DesignConstants.AVAILABLE_SEATS_LOW_BG);
                     setForeground(DesignConstants.AVAILABLE_SEATS_LOW_FG);
                 } else {
-                    // Adjusted background for darker green
                     setBackground(isSelected ? DesignConstants.AVAILABLE_SEATS_FULL.darker() : DesignConstants.AVAILABLE_SEATS_FULL);
-                    setForeground(DesignConstants.BUTTON_TEXT_COLOR); // Changed to black for better contrast
+                    setForeground(DesignConstants.BUTTON_TEXT_COLOR);
                 }
             } else {
                 setBackground(isSelected ? table.getSelectionBackground() : DesignConstants.TABLE_CELL_DEFAULT_BG);
                 setForeground(DesignConstants.TEXT_MUTED);
             }
-            
+
             return this;
         }
     }

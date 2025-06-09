@@ -1,0 +1,3 @@
+1::veg momo::veg::20::VEG::false
+2::chicken momo::::20::NON_VEG::false
+3::chicken chowmein::hih::10::NON_VEG::false

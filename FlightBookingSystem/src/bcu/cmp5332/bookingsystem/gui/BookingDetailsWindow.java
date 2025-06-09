@@ -67,35 +67,35 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
         
         Customer customer = booking.getCustomer();
         addRow(detailsPanel, "Customer:", 
-               customer != null ? customer.getName() + " (ID: " + customer.getId() + ")" : "N/A", 
-               gbc, 1);
+                customer != null ? customer.getName() + " (ID: " + customer.getId() + ")" : "N/A", 
+                gbc, 1);
         
         Flight outboundFlight = booking.getOutboundFlight();
         addRow(detailsPanel, "Outbound Flight:", 
-               outboundFlight != null ? outboundFlight.getFlightNumber() + 
-               " (" + outboundFlight.getOrigin() + " to " + outboundFlight.getDestination() + 
-               " on " + outboundFlight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")" : "N/A", 
-               gbc, 2);
+                outboundFlight != null ? outboundFlight.getFlightNumber() + 
+                " (" + outboundFlight.getOrigin() + " to " + outboundFlight.getDestination() + 
+                " on " + outboundFlight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")" : "N/A", 
+                gbc, 2);
 
         Flight returnFlight = booking.getReturnFlight();
         addRow(detailsPanel, "Return Flight:", 
-               returnFlight != null ? returnFlight.getFlightNumber() + 
-               " (" + returnFlight.getOrigin() + " to " + returnFlight.getDestination() + 
-               " on " + returnFlight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")" : "N/A", 
-               gbc, 3);
+                returnFlight != null ? returnFlight.getFlightNumber() + 
+                " (" + returnFlight.getOrigin() + " to " + returnFlight.getDestination() + 
+                " on " + returnFlight.getDepartureDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")" : "N/A", 
+                gbc, 3);
         
         addRow(detailsPanel, "Booked Class:", 
-               booking.getBookedClass() != null ? booking.getBookedClass().getClassName() : "N/A", 
-               gbc, 4);
+                booking.getBookedClass() != null ? booking.getBookedClass().getClassName() : "N/A", 
+                gbc, 4);
         
         Meal meal = booking.getMeal();
         addRow(detailsPanel, "Meal:", 
-               meal != null ? meal.getName() + " (£" + String.format("%.2f", meal.getPrice()) + ")" : "None", 
-               gbc, 5);
+                meal != null ? meal.getName() + " (£" + String.format("%.2f", meal.getPrice()) + ")" : "None", 
+                gbc, 5);
         
         addRow(detailsPanel, "Booking Date:", 
-               booking.getBookingDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), 
-               gbc, 6);
+                booking.getBookingDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), 
+                gbc, 6);
         addRow(detailsPanel, "Outbound Price:", "£" + String.format("%.2f", booking.getBookedPriceOutbound()), gbc, 7);
         addRow(detailsPanel, "Return Price:", "£" + String.format("%.2f", booking.getBookedPriceReturn()), gbc, 8);
         addRow(detailsPanel, "Total Booking Price:", "£" + String.format("%.2f", booking.getTotalBookingPrice()), gbc, 9);
@@ -117,19 +117,23 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
         buttonPanel.setBackground(DesignConstants.LIGHT_GRAY_BG);
 
         editBookingButton = new JButton("Edit Booking");
-        customizeButton(editBookingButton, DesignConstants.BUTTON_BLUE, DesignConstants.BUTTON_HOVER_BLUE, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
+        // Changed textColor to DesignConstants.BUTTON_TEXT_COLOR (which is black)
+        customizeButton(editBookingButton, DesignConstants.BUTTON_BLUE, DesignConstants.BUTTON_HOVER_BLUE, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         editBookingButton.setEnabled(!booking.isCancelled()); 
 
         cancelBookingButton = new JButton("Cancel Booking");
-        customizeButton(cancelBookingButton, DesignConstants.STATUS_CANCELLED_RED, DesignConstants.STATUS_CANCELLED_RED.darker(), DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
+        // Changed textColor to DesignConstants.BUTTON_TEXT_COLOR (which is black)
+        customizeButton(cancelBookingButton, DesignConstants.STATUS_CANCELLED_RED, DesignConstants.STATUS_CANCELLED_RED.darker(), DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         cancelBookingButton.setEnabled(!booking.isCancelled());
 
         rebookBookingButton = new JButton("Rebook Booking");
-        customizeButton(rebookBookingButton, DesignConstants.REBOOK_BUTTON_ORANGE, DesignConstants.REBOOK_BUTTON_HOVER_ORANGE, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
+        // Changed textColor to DesignConstants.BUTTON_TEXT_COLOR (which is black)
+        customizeButton(rebookBookingButton, DesignConstants.REBOOK_BUTTON_ORANGE, DesignConstants.REBOOK_BUTTON_HOVER_ORANGE, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         rebookBookingButton.setEnabled(!booking.isCancelled());
 
         backButton = new JButton("Back to Bookings");
-        customizeButton(backButton, Color.LIGHT_GRAY, Color.GRAY, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.TEXT_DARK);
+        // Changed textColor to DesignConstants.BUTTON_TEXT_COLOR (which is black)
+        customizeButton(backButton, Color.LIGHT_GRAY, Color.GRAY, DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
 
         buttonPanel.add(editBookingButton);
         buttonPanel.add(cancelBookingButton);
@@ -188,6 +192,9 @@ public class BookingDetailsWindow extends JFrame implements ActionListener {
             new EditBookingWindow(mw, booking);
             this.dispose();
         } else if (ae.getSource() == cancelBookingButton) {
+            // Note: Currently, CancelBookingWindow constructor might need adjustment
+            // to accept a Booking object if it's meant to cancel a specific one directly.
+            // Assuming it takes customer and outbound flight to identify the booking.
             new CancelBookingWindow(mw, booking.getCustomer(), booking.getOutboundFlight()); 
             this.dispose();
         } else if (ae.getSource() == rebookBookingButton) {

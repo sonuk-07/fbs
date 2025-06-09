@@ -65,13 +65,15 @@ public class CancelBookingWindow extends JFrame implements ActionListener {
 
         // Confirm Button
         confirmButton = new JButton("Confirm Cancellation");
+        // Changed textColor from Color.WHITE to DesignConstants.BUTTON_TEXT_COLOR (BLACK)
         customizeButton(confirmButton, DesignConstants.STATUS_CANCELLED_RED, DesignConstants.CANCEL_BUTTON_HOVER_RED,
-                        DesignConstants.BUTTON_BEVEL_PADDING_BORDER, Color.WHITE);
+                         DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         
         // Cancel Button
         cancelButton = new JButton("Keep Booking");
+        // Changed textColor from DesignConstants.TEXT_DARK to DesignConstants.BUTTON_TEXT_COLOR (BLACK)
         customizeButton(cancelButton, DesignConstants.SECONDARY_BUTTON_BG, DesignConstants.SECONDARY_BUTTON_HOVER_BG,
-                        DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.TEXT_DARK);
+                         DesignConstants.BUTTON_BEVEL_PADDING_BORDER, DesignConstants.BUTTON_TEXT_COLOR);
         
         buttonPanel.add(confirmButton);
         buttonPanel.add(cancelButton);
@@ -119,12 +121,12 @@ public class CancelBookingWindow extends JFrame implements ActionListener {
                 String bookingIdMsg = (actualCancelledBooking != null) ? "Booking ID " + actualCancelledBooking.getId() : "A booking";
 
                 JOptionPane.showMessageDialog(this, bookingIdMsg + " has been cancelled.", 
-                                               "Cancellation Successful", JOptionPane.INFORMATION_MESSAGE);
+                                              "Cancellation Successful", JOptionPane.INFORMATION_MESSAGE);
                 mw.refreshCurrentView();
                 this.dispose();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Error cancelling booking: " + e.getMessage(), 
-                                               "Cancellation Error", JOptionPane.ERROR_MESSAGE);
+                                              "Cancellation Error", JOptionPane.ERROR_MESSAGE);
                 e.printStackTrace();
             }
         } else if (ae.getSource() == cancelButton) {

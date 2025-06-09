@@ -22,6 +22,8 @@ public final class DesignConstants {
     public static final Color TEXT_HIGHLIGHT = new Color(39, 174, 96);
     public static final Color STATUS_ACTIVE_GREEN = new Color(46, 204, 113);
     public static final Color STATUS_CANCELLED_RED = new Color(231, 76, 60);
+    // Added STATUS_DEPARTED_ORANGE here
+    public static final Color STATUS_DEPARTED_ORANGE = new Color(255, 140, 0); // A bright orange for departed flights
     public static final Color REBOOK_BUTTON_ORANGE = new Color(255, 165, 0);
     public static final Color REBOOK_BUTTON_HOVER_ORANGE = new Color(204, 133, 0);
     public static final Color INFO_PANEL_TITLE_COLOR = new Color(50, 50, 150);

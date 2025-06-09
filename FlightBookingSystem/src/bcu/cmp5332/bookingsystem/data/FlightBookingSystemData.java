@@ -13,10 +13,10 @@ public class FlightBookingSystemData {
     private static final List<DataManager> dataManagers = new ArrayList<>();
     
     static {
-        dataManagers.add(new FlightDataManager());
-        dataManagers.add(new CustomerDataManager());
-        dataManagers.add(new BookingDataManager());
         dataManagers.add(new MealDataManager());
+        dataManagers.add(new CustomerDataManager());
+        dataManagers.add(new FlightDataManager());
+        dataManagers.add(new BookingDataManager());
     }
 
     

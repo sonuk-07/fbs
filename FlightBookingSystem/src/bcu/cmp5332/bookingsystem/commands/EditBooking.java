@@ -5,45 +5,20 @@ import bcu.cmp5332.bookingsystem.model.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+// No longer need InputStreamReader if using the passed reader
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-
-/**
- * Command to edit an existing flight booking.
- * This command allows a user to modify specific details of a booking,
- * such as the booking date and the commercial class.
- */
 
 public class EditBooking implements Command {
     private final int customerId;
     private final int flightId;
 
-    /**
-     * Constructor for the EditBooking command.
-     * @param customerId The ID of the customer whose booking is to be edited.
-     * @param flightId The ID of the flight associated with the booking to be edited.
-     */
     public EditBooking(int customerId, int flightId) {
         this.customerId = customerId;
         this.flightId = flightId;
     }
-    
-    
-    /**
-     * Executes the EditBooking command.
-     * This method guides the user through modifying the booking date and
-     * the commercial class for a specific booking. It includes input validation
-     * and displays available options.
-     *
-     * @param fbs The FlightBookingSystem instance.
-     * @param reader The BufferedReader for user input.
-     * @throws FlightBookingSystemException If the customer, flight, or booking is not found,
-     * or if input parsing fails after multiple attempts,
-     * or if there's an I/O error.
-     */
-    
+
     @Override
     public void execute(FlightBookingSystem fbs, BufferedReader reader) throws FlightBookingSystemException {
         Customer customer = fbs.getCustomerByID(customerId);
@@ -51,13 +26,11 @@ public class EditBooking implements Command {
             throw new FlightBookingSystemException("Customer with ID " + customerId + " not found.");
         }
 
-        // Get flight
         Flight flight = fbs.getFlightByID(flightId);
         if (flight == null) {
             throw new FlightBookingSystemException("Flight with ID " + flightId + " not found.");
         }
 
-        // Find booking
         Booking bookingToEdit = null;
         for (Booking booking : customer.getBookings()) {
             if ((booking.getOutboundFlight() != null && booking.getOutboundFlight().getId() == flightId) ||
@@ -65,19 +38,19 @@ public class EditBooking implements Command {
                 bookingToEdit = booking;
                 break;
             }
-        }     
+        }
 
         if (bookingToEdit == null) {
             throw new FlightBookingSystemException("Booking for Customer ID " + customerId + " on Flight ID " + flightId + " not found.");
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+        try { // Removed 'br' and 'try-with-resources'
             // --- Edit Booking Date ---
             LocalDate newBookingDate = null;
             int attempts = 3;
             while (attempts > 0) {
                 System.out.print("Enter new booking date (YYYY-MM-DD) or press Enter to keep current (" + bookingToEdit.getBookingDate() + "): ");
-                String input = br.readLine();
+                String input = reader.readLine(); // Use the passed reader
                 if (input.isEmpty()) {
                     newBookingDate = bookingToEdit.getBookingDate();
                     break;
@@ -109,7 +82,7 @@ public class EditBooking implements Command {
             attempts = 3;
             while (attempts > 0) {
                 System.out.print("Enter new class number (1-" + availableClasses.size() + ") or press Enter to keep current (" + bookingToEdit.getBookedClass().getClassName() + "): ");
-                String classInput = br.readLine();
+                String classInput = reader.readLine(); // Use the passed reader
                 if (classInput.isEmpty()) {
                     newClass = bookingToEdit.getBookedClass();
                     break;

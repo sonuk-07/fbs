@@ -13,7 +13,6 @@ public interface Command {
         + "\tlistcustomers                             print all active customers\n"
         + "\tlistallcustomers                          print all customers (including deleted)\n"
         + "\tlistmeals                                 print all active meals\n" // NEW
-        + "\tlistallmeals                              print all meals (including deleted)\n" // NEW
         + "\taddflight                                 add a new flight\n"
         + "\tremoveflight [flight id]                  remove a flight by ID\n"
         + "\taddcustomer                               add a new customer\n"

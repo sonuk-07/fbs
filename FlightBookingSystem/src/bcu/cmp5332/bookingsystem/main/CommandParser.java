@@ -200,14 +200,22 @@ public class CommandParser {
                 return new CancelBooking(cancelCustomerId, cancelFlightId);
                 
             case "editbooking":
-                if (parts.length < 3) {
+                if (parts.length < 2) {
                     throw new FlightBookingSystemException("Usage: editbooking <customer ID> <flight ID>");
                 }
-                int editCustomerId = Integer.parseInt(parts[1]);
-                int editFlightId = Integer.parseInt(parts[2]);
-                // Commands now need the reader, so pass it to them
-                return new EditBooking(editCustomerId, editFlightId);
-
+                // Split the argument part (parts[1]) into individual IDs
+                String[] editArgs = parts[1].trim().split(" ");
+                if (editArgs.length != 2) {
+                    throw new FlightBookingSystemException("Usage: editbooking <customer ID> <flight ID>");
+                }
+                try {
+                    int editCustomerId = Integer.parseInt(editArgs[0]);
+                    int editFlightId = Integer.parseInt(editArgs[1]);
+                    // Commands now need the reader, so pass it to them
+                    return new EditBooking(editCustomerId, editFlightId);
+                } catch (NumberFormatException e) {
+                    throw new FlightBookingSystemException("Invalid ID format for editbooking. Please enter numbers for IDs.");
+                }
             case "rebookflight":
                 if (parts.length < 2) {
                     throw new FlightBookingSystemException("Usage: rebookflight <customer ID> <old flight ID> <new flight ID> <new class>");

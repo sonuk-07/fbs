@@ -60,4 +60,21 @@ public enum CommercialClassType {
     public double getMultiplier() {
         return multiplier;
     }
+    
+    /**
+     * Static method to get a CommercialClassType enum entry from its display name.
+     * This is useful when converting a String (e.g., from a JComboBox) back to an enum.
+     *
+     * @param className The display name of the commercial class (e.g., "Economy", "Business").
+     * @return The corresponding CommercialClassType enum entry.
+     * @throws IllegalArgumentException if no matching CommercialClassType is found for the given name.
+     */
+    public static CommercialClassType fromClassName(String className) {
+        for (CommercialClassType type : CommercialClassType.values()) {
+            if (type.getClassName().equalsIgnoreCase(className)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown commercial class name: " + className);
+    }
 }
